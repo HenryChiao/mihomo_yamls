@@ -1,0 +1,163 @@
+# 此为精简配置，如需更为详细的配置，可参考 https://wiki.metacubex.one/config
+# 如不会配置，也可自行寻找懒人配置，例如(Surfing 模块配置)：https://raw.githubusercontent.com/GitMetaio/Surfing/refs/heads/main/box_bll/clash/config.yaml
+
+proxy-providers:
+  proxy1:
+    type: http
+    url: "填写订阅链接"
+    path: ./proxy_provider/proxy1.yaml
+    interval: 3600
+    health-check:
+      enable: true
+      url: https://cp.cloudflare.com
+      interval: 300
+      timeout: 1000
+      tolerance: 100
+  # 多订阅按照下面照葫芦画瓢即可
+  # proxy2:
+  #   type: http
+  #   url: "填写订阅链接"
+  #   path: ./proxy_provider/proxy2.yaml
+  #   interval: 3600
+  #   health-check:
+  #     enable: true
+  #     url: https://cp.cloudflare.com
+  #     interval: 300
+  #     timeout: 1000
+  #     tolerance: 100
+
+mixed-port: 7890
+redir-port: 9797
+tproxy-port: 9898
+mode: Rule
+bind-address: '*'
+ipv6: true
+allow-lan: true
+unified-delay: false
+tcp-concurrent: true
+log-level: error
+find-process-mode: always
+global-client-fingerprint: random
+external-controller: 0.0.0.0:9090
+external-ui: ./dashboard
+
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+sniffer:
+  enable: true
+  override-destination: false
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+
+tun:
+  enable: true
+  device: meta
+  stack: gvisor
+  dns-hijack: [any:53, tcp://any:53]
+  udp-timeout: 300
+  auto-route: true
+  auto-redirect: false
+  auto-detect-interface: true
+  strict-route: false
+
+dns:
+  enable: true
+  ipv6: true
+  listen: 0.0.0.0:1053
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - "rule-set:Fake-IP-Filter"
+  proxy-server-nameserver:
+    - 223.5.5.5
+  nameserver-policy:
+    "rule-set:cn_domain":
+      - 223.5.5.5
+  nameserver:
+    - 8.8.8.8
+
+proxies:
+  - {name: DNS_Hijack, type: dns}
+
+proxy-groups:
+  - name: 国外代理
+    type: select
+    include-all: true
+    exclude-type: "dns"
+    icon: https://ghfast.top/raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Proxy.png
+
+  - name: 国内直连
+    type: select
+    proxies: [DIRECT]
+    include-all: true
+    exclude-type: "dns"
+    icon: https://ghfast.top/raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/China.png
+
+  - name: 漏网之鱼
+    type: select
+    proxies: [国外代理,国内直连]
+    icon: https://ghfast.top/raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Final.png
+
+rule-providers:
+  Fake-IP-Filter:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    path: ./rule_provider/Fake-IP-Filter.mrs
+    url: "https://ghfast.top/github.com/DustinWin/ruleset_geodata/raw/refs/heads/mihomo-ruleset/fakeip-filter.mrs"
+    proxy: DIRECT
+  proxy_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    path: ./rule_provider/proxy_domain.mrs
+    url: "https://ghfast.top/github.com/DustinWin/ruleset_geodata/raw/refs/heads/mihomo-ruleset/proxy.mrs"
+    proxy: DIRECT
+  cn_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    path: ./rule_provider/cn_ip.mrs
+    url: "https://ghfast.top/github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/cn.mrs"
+    proxy: DIRECT
+  private_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    path: ./rule_provider/private_ip.mrs
+    url: "https://ghfast.top/github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/private.mrs"
+    proxy: DIRECT
+  cn_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    path: ./rule_provider/cn_domain.mrs
+    url: "https://ghfast.top/github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/cn.mrs"
+    proxy: DIRECT
+  private_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    path: ./rule_provider/private_domain.mrs
+    url: "https://ghfast.top/github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/private.mrs"
+    proxy: DIRECT
+  
+rules:
+  - DST-PORT,53,DNS_Hijack
+  - RULE-SET,proxy_domain,国外代理
+  - OR,((RULE-SET,cn_ip),(RULE-SET,cn_domain),(RULE-SET,private_ip),(RULE-SET,private_domain)),国内直连
+  - MATCH,漏网之鱼

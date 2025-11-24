@@ -1,0 +1,411 @@
+# 端口为 0 时不启用该代理端口
+# tproxy-port: 1234 # tproxy 透明代理端口,可代理 TCP 与 UDP 流量. 仅限 linux(Android) 适用
+mixed-port: 2234 # 混合端口 同时支持 HTTP(S) 和 SOCKS5 协议
+ipv6: true # 内核接受 IPv6 流量
+allow-lan: true # 允许其他设备通过 Clash 的代理端口访问互联网
+lan-allowed-ips: [127.0.0.1/32]
+skip-auth-prefixes: [127.0.0.1/32]
+bind-address: '*' # 绑定地址,仅允许其他设备通过这个地址访问
+unified-delay: false # 统一延迟,会计算 RTT,以消除连接握手等带来的不同类型节点的延迟差异
+tcp-concurrent: true # 并发向所有 IP 发起 TCP 连接,选择最快握手成功的结果
+
+log-level: silent # 日志等级 debug/info/warning/error/silent
+mode: rule # 运行模式 rule/global/direct,暂不支持 script
+# find-process-mode: off # 进程匹配
+global-client-fingerprint: chrome # 全局 TLS 指纹,优先低于 proxy 内的 client-fingerprint
+# global-ua: "clash.meta/"  # 外部资源下载时使用的的 UA,默认为 clash.meta
+keep-alive-interval: 30 # 发送 Keep-Alive 探测包的间隔时间 单位 s
+keep-alive-idle: 60 # 连接空闲多久后开始发送 Keep-Alive 探测包
+# experimental:
+#   fingerprints: ['qq']
+
+profile:
+  store-selected: true # 储存 API 对策略组的选择
+  store-fake-ip: true # 储存 fakeip 映射表，域名再次发生连接时，使用原有映射地址
+
+external-controller: 127.0.0.1:9494 # API 监听地址
+external-controller-cors: # API CORS 标头配置
+  allow-origins: # 允许哪些前端页面的域名访问 API
+    - 127.0.0.1
+    - https://board.zash.run.place
+  allow-private-network: false
+external-ui: ./ui # WebUI 的保存路径
+external-ui-url: 'https://github.com/Zephyruso/zashboard/archive/refs/heads/gh-pages.zip' # WebUI 下载地址
+# secret: 'cat' # API 的访问密钥
+
+hosts:
+  # 支持单域名多 IP,格式为数组; 支持域名通配符,不使用通配符的域名优先级高于使用通配符的域名
+  # 'doh.pub': ['1.12.12.12','120.53.53.53','2402:4e00::']
+  'trpc.o3.*': 127.0.0.1 # 环境检测包(trpc.o3.*)拦截
+  'iosapps.itunes.apple.com': iosapps.itunes.apple.com.m.alikunlun.net # 改善 App Store 下载速度
+  'services.googleapis.cn': services.googleapis.com # Google 重定向
+  'www.google.cn': www.google.com
+  'www.g.cn': www.google.com
+  'maps.google.cn': maps.google.com
+  'ditu.google.cn': maps.google.com
+
+dns:
+  # 使用 DoH、DoT、DoQ 协议比传统基于 UDP 的查询更消耗系统资源，且延迟通常更高
+  enable: true # 如为 false,则使用系统 DNS 解析
+  # listen: 0.0.0.0:53
+  ipv6: true # false 将返回 AAAA 的空结果
+  respect-rules: true # dns 连接遵守路由规则,需配置 proxy-server-nameserver
+  enhanced-mode: fake-ip # DNS 处理模式 redir-host/fake-ip,Meta 回滚了 Redir Host 部分代码,仍然保留 Clash v1.70 以前的 Redir Host 模式的域名传递行为
+  fake-ip-range: 28.0.0.1/8
+  fake-ip-filter: ['rule-set:site_private,site_fake-ip'] # 根据 fake-ip 模式返回假 IP,默认 blacklist 模式 (即匹配的不返回,其余返回)
+  # cache-algorithm: arc # 缓存算法,默认 lru
+  default-nameserver: [223.5.5.5, 119.29.29.29] # 用于解析其它 DNS 为域名类型的 DNS,必须为 IP类型,可为加密 DNS
+  proxy-server-nameserver: &direct [https://dns.alidns.com/dns-query, https://doh.pub/dns-query] # 用于节点的域名解析,其他 DNS 如需过代理查询时则配置该项以防出现鸡蛋问题
+  nameserver: &proxy [https://1.0.0.1/dns-query, https://8.8.4.4/dns-query] # 默认域名解析,如不配置 fallback/proxy-server-nameserver,则都由 nameserver 解析
+  nameserver-policy: { 'rule-set:site_private,site_cn': *direct }
+  direct-nameserver: *direct # 配置后直连出站会使用它重新解析
+  direct-nameserver-follow-policy: true # 如果遵循 nameserver-policy 则 np 的直连不会被 dn 重新解析,此时 dn 用于其余的直连最终解析
+
+tun:
+  enable: true
+  stack: mixed # tun 模式堆栈 system/gvisor/mixed 防火墙未放行内核,则无法使用 system 和 mixed 协议栈
+  device: Cat # 指定 tun 网卡名称,MacOS 设备只能使用 utun 开头的网卡名
+  strict-route: false # 严格路由 所有连接路由到 tun 来防止泄漏,但设备将无法被其他设备访问
+  auto-route: true # 自动设置全局路由,可以自动将全局流量路由进入 tun 网卡
+  # auto-redirect: true # 仅支持 Linux,自动配置 iptables/nftables 以重定向 TCP 连接,需要 auto-route 已启用
+  auto-detect-interface: true # 自动选择流量出口接口,多出口网卡同时连接的设备建议手动指定出口网卡
+  mtu: 9000 # 最大传输单元,会影响极限状态下的速率
+  # dns-hijack: [ 'any:53','tcp://any:53' ] # 在 MacOS/Windows 无法自动劫持发往局域网的 dns 请求,在 Android 如开启 私人dns 则无法自动劫持 dns 请求
+
+listeners:
+  # 使用流量入站,可以作为服务端
+  - { name: in_mixed, type: mixed, port: 8484, udp: true, listen: 0.0.0.0 } # 用于监听局域网流量的 HTTP(S) 和 SOCKS 代理混合入站,适用于无加密传输
+
+proxies:
+  # 出站配置  dns/direct 等默认开启 udp
+  - { name: dns-hijack, type: dns } # dns 出站会将请求劫持到内部 dns 模块,所有请求均在内部处理
+  - { name: 以太网, type: direct, interface-name: '以太网' } # 有线接口
+  - { name: WLAN, type: direct, interface-name: 'WLAN' } # Wi-Fi接口
+  - { name: wlan0, type: direct, interface-name: 'wlan0' }
+  - { name: wlan1, type: direct, interface-name: 'wlan1' }
+  - { name: rmnet_data0, type: direct, interface-name: 'rmnet_data0' } # Qualcomm 数据
+  - { name: rmnet_data1, type: direct, interface-name: 'rmnet_data1' }
+  # - { name: ccmni0, type: direct, interface-name: 'ccmni0' } # MTK 数据
+  # - { name: ccmni1, type: direct, interface-name: 'ccmni1' }
+  # - { name: ap0, type: direct, interface-name: 'ap0' } # 热点
+  # 查看接口命令: netsh interface show interface  Tip: 手机需要 root 以绑定接口
+
+proxy-providers-anchor:
+  # 锚点 如合并时有重复的项,则不会去合并; 锚点名尽量不要含特殊字符
+  - &inline-base
+    proxy: Update # 用于更新的策略或出站
+    interval: 43200 # 更新 provider 的间隔,单位 s  Tip: 设置的过于小可能被机场 ban
+    # filter: '(?:🇭🇰|港|(?i:\b(?:hk|hkg|hong|hongkong)\b))`(?:🇹🇼|台|高雄|(?i:\b(?:tw|twn|tai|taiwan)\b))`(?:🇰🇷|韩国|南韩|首尔|釜山|(?i:\b(?:kr|kor|korea|South\s*Korea)\b))`(?:🇯🇵|日本|川日|东京|大阪|泉日|埼玉|(?i:\b(?:jp|jpn|japan)\b))`(?:🇸🇬|新加坡|狮|(?i:\b(?:sg|sgp|singapore)\b))`(?:🇺🇸|美|凤凰城|硅谷|洛杉矶|西雅图|芝加哥|(?i:\b(?:us|usa|united\s*states)\b))'
+    # exclude-filter: '(?:流量|期|知|告|入|群|邀|返|循环|官|客|站|址|获|订|机场|下次|版本|备用|已|联系|邮|服务|工单|贩卖|导航|倒卖|防止|国内|地址|频道|无法|说明|使用|提示|特别|访问|支持|教程|关注|作者|(?i:\b(?:use|used|tg|total|expire|email|panel|channel|website|author|update)\b)|\b\d{4}-\d{2}-\d{2}\b|\d+G)' # 引入筛选/排除,使用筛选可能会在一定程度上增加CPU占用/转发延迟,尤其是使用较为复杂正则的情况下
+    exclude-type: 'direct' # 排除匹配 type 的节点,用 | 分隔
+    health-check: { enable: true, url: 'https://connectivitycheck.android.com/generate_204', interval: 90, timeout: 3500, expected-status: 204 } # 延迟检测
+    header: { User-Agent: ['mihomo/9.99.9 clash.meta/9.99.9 ClashMeta/9.99.9 FlClash/9.99.9 clash-verge/9.99.9'] } # 自定义 HTTP 请求头
+  - &override { udp: true } # 覆写节点内容
+  # - &override-proxy-name # 对节点名称内容进行替换
+  #   proxy-name:
+  #     - pattern: '\s*[\x{1F1E6}-\x{1F1FF}]{2}\s*'
+  #       target: ''
+  #     - pattern: '\s*\|\s*'
+  #       target: '-'
+
+proxy-providers:
+  # 合法的远程代理集里必须包含 proxies 字段,远程代理集为空时会以 DIRECT 替代
+  Provider_1:
+    type: http # 必须,provider 类型 http/file
+    path: ./proxy_providers/Provider_1.yaml # provider 的保存路径
+    url: 'http://127.0.0.1:38324/download/1' # 引号内更改机场链接
+    <<: *inline-base
+    override: { <<: *override, additional-prefix: 'A-' }
+  Provider_2:
+    type: http
+    path: ./proxy_providers/Provider_2.yaml
+    url: 'http://127.0.0.1:38324/download/2' # 引号内更改机场链接
+    <<: *inline-base
+    override: { <<: *override, additional-prefix: 'B-' }
+  Provider_3:
+    type: http
+    path: ./proxy_providers/Provider_3.yaml
+    url: 'http://127.0.0.1:38324/download/3' # 引号内更改机场链接
+    <<: *inline-base
+    override: { <<: *override, additional-prefix: 'C-' }
+  Provider_4:
+    type: http
+    path: ./proxy_providers/Provider_4.yaml
+    url: 'http://127.0.0.1:38324/download/4' # 引号内更改机场链接
+    <<: *inline-base
+    override: { <<: *override, additional-prefix: 'D-' }
+  Provider_Baidu:
+    type: inline
+    health-check: { enable: true, url: 'https://connectivitycheck.platform.hicloud.com/generate_204', interval: 0, timeout: 3500, expected-status: 204 }
+    payload:
+      - { name: Resolution, type: http, server: cloudnproxy.baidu.com, port: 443, headers: &direct_baidu { Host: ascdn.baidu.com, User-Agent: baiduboxapp, Connection: Keep-Aliv, X-T5-Auth: '1951164069' } }
+      - { name: 北京北京-CT 1, type: http, server: 220.181.7.1, port: 443, headers: *direct_baidu }
+      - { name: 北京北京-CT 2, type: http, server: 220.181.33.174, port: 443, headers: *direct_baidu }
+      - { name: 北京北京-CT 3, type: http, server: 220.181.111.189, port: 443, headers: *direct_baidu }
+      - { name: 广东东莞-CM, type: http, server: 183.240.98.84, port: 443, headers: *direct_baidu }
+      - { name: 广东广州-CT, type: http, server: 14.215.182.75, port: 443, headers: *direct_baidu }
+      - { name: 广东广州-CU 1, type: http, server: 163.177.17.6, port: 443, headers: *direct_baidu }
+      - { name: 广东广州-CU 2, type: http, server: 163.177.17.189, port: 443, headers: *direct_baidu }
+      - { name: 江苏南京-CM, type: http, server: 36.155.169.188, port: 443, headers: *direct_baidu }
+      - { name: 江苏南京-CT 1, type: http, server: 180.101.50.208, port: 443, headers: *direct_baidu }
+      - { name: 江苏南京-CT 2, type: http, server: 180.101.50.249, port: 443, headers: *direct_baidu }
+      - { name: 江苏南京-CU, type: http, server: 153.3.237.117, port: 443, headers: *direct_baidu }
+      - { name: 江苏苏州-CU, type: http, server: 157.0.146.158, port: 443, headers: *direct_baidu }
+      - { name: 河北保定-CU 1, type: http, server: 110.242.70.68, port: 443, headers: *direct_baidu }
+      - { name: 河北保定-CU 2, type: http, server: 110.242.70.69, port: 443, headers: *direct_baidu }
+    override: { additional-prefix: 'Baidu-' }
+    # 不保证可用性
+    # baidumlip: ping -c 1 cloudnproxy.baidu.com | sed '1{s/[^(]*(//;s/).*//;q}'
+
+proxy-groups-anchor:
+  # 锚点 如合并时有重复的项,则不会去合并; 锚点名尽量不要含特殊字符
+  type_anchor:
+    - &type_ut { type: url-test, url: 'https://connectivitycheck.android.com/generate_204', interval: 90, timeout: 3500, max-failed-times: 2, expected-status: 204, tolerance: 10 }
+    - &type_fb { type: fallback, url: 'https://connectivitycheck.android.com/generate_204', interval: 90, timeout: 3500, max-failed-times: 2, expected-status: 204 }
+    - &type_lb-rr { type: load-balance, strategy: round-robin, url: 'https://connectivitycheck.android.com/generate_204', interval: 90, timeout: 3500, max-failed-times: 2, expected-status: 204 }
+    # - &type_lb-ch { type: load-balance, strategy: consistent-hashing, url: 'https://connectivitycheck.android.com/generate_204', interval: 90, timeout: 3500, max-failed-times: 2, expected-status: 204 }
+    # - &type_lb-ss { type: load-balance, strategy: sticky-sessions, url: 'https://connectivitycheck.android.com/generate_204', interval: 90, timeout: 3500, max-failed-times: 2, expected-status: 204 }
+  proxies_anchor:
+    - &rule { proxies: [PASS, Proxy, Local, 香港, 台湾, 韩国, 日本, 狮城, 美国] }
+    - &direct { proxies: [Local, Proxy, PASS, 香港, 台湾, 韩国, 日本, 狮城, 美国] }
+    - &proxy { proxies: [Proxy, Local, PASS, 香港, 台湾, 韩国, 日本, 狮城, 美国] }
+    - &out { proxies: [香港, 台湾, 韩国, 日本, 狮城, 美国] }
+    - &reject { proxies: [REJECT, REJECT-DROP, PASS] }
+  filter_anchor:
+    # - &exclude_eb '回国|校园' # 回国
+    # - &filter_0x '0倍|(?i:x?0x?)' # 倍率
+    # - &filter_0.1x '0\.2倍|(?i:x?0\.2x?)'
+    # - &filter_0.5x '0\.25倍|(?i:x?0\.25x?)'
+    # - &filter_0.8x '0\.5倍|(?i:x?0\.5x?)'
+    # - &filter_ar '(?:🇦🇷|阿根廷|布宜诺斯艾利斯|罗萨里奥|门多萨|(?i:\b(?:ar|arg|argentina)\b))'
+    # - &filter_de '(?:🇩🇪|德|柏林|慕尼黑|(?i:\b(?:de|deu|germany)\b))'
+    # - &filter_fr '(?:🇫🇷|法|巴黎|马赛|(?i:\b(?:fr|fra|france)\b))'
+    # - &filter_gb '(?:🇬🇧|英|伦敦|曼彻斯特|(?i:\b(?:uk|gb|gbr|united\s*kingdom|britain)\b))'
+    - &filter_hk '(?:🇭🇰|港|(?i:\b(?:hk|hkg|hong|hongkong)\b))'
+    # - &filter_hk_1 {filter: '(?=.*#1)(?=.*(?:🇭🇰|港|(?i:hk|hkg|hong|hongkong)\b))'} # 包含 #1 的香港
+    # - &filter_in '(?:🇮🇳|印度|新德里|孟买|班加罗尔|加尔各答|(?i:\b(?:in|ind|india)\b))'
+    - &filter_jp '(?:🇯🇵|日本|川日|东京|大阪|泉日|埼玉|(?i:\b(?:jp|jpn|japan)\b))'
+    - &filter_kr '(?:🇰🇷|韩国|南韩|首尔|釜山|(?i:\b(?:kr|kor|korea|South\s*Korea)\b))'
+    # - &filter_lu '(?:🇱🇺|卢森堡|(?i:\b(?:lu|lux|luxembourg|bt|pt)\b))' # Torrent专用
+    # - &filter_ru '(?:🇷🇺|俄罗斯|俄联邦|莫斯科|圣彼得堡|西伯利亚|(?i:\b(?:ru|rus|russia)\b))'
+    - &filter_sg '(?:🇸🇬|新加坡|狮|(?i:\b(?:sg|sgp|singapore)\b))'
+    # - &filter_tr '(?:🇹🇷|土耳其|安卡拉|伊斯坦布尔|伊兹密尔|(?i:\b(?:tr|tur|turkey)\b))'
+    - &filter_tw '(?:🇹🇼|台|高雄|(?i:\b(?:tw|twn|tai|taiwan)\b))'
+    - &filter_us '(?:🇺🇸|美|凤凰城|硅谷|洛杉矶|西雅图|芝加哥|(?i:\b(?:us|usa|united\s*states)\b))'
+
+proxy-groups:
+  # 策略组可以包含多个代理,或多个远程代理集; 不包含任何代理的策略组,会被当作为 DIRECT 策略处理; 如策略组代理来自远程代理集时,则使用 proxy-providers 的 health-check
+  - { name: Proxy, type: select, proxies: [Fallback, Local, 香港, 台湾, 韩国, 日本, 狮城, 美国], icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Final.png' }
+  - { name: Local, type: select, proxies: [DIRECT, 以太网, WLAN, 以太网 + WLAN, rmnet_data0, rmnet_data1, wlan0, wlan1, data0 + wlan0, data0 + wlan1, data1 + wlan0, data1 + wlan1, Baidu LR], use: [Provider_Baidu], url: 'https://connectivitycheck.platform.hicloud.com/generate_204', interval: 0, timeout: 3500, max-failed-times: 2, expected-status: 204, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/China_Map.png' }
+  - { name: FlexiRule, type: select, <<: *rule, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Heart.png' }
+  - { name: CNLite, type: select, <<: *rule, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Global.png' }
+  - { name: Message, type: select, <<: *direct, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Google_Search.png' }
+  - { name: WeChat, type: select, <<: *direct, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/WeChat.png' }
+  - { name: Telegram, type: select, <<: *proxy, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Telegram.png' }
+  - { name: YouTube, type: select, <<: *proxy, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/YouTube.png' }
+  # - { name: Emby, type: select, <<: *rule, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Emby.png' }
+  - { name: OneDrive, type: select, <<: *direct, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/OneDrive.png' }
+  # - { name: LModel, type: select, url: 'https://api.openai.com/cdn-cgi/trace', <<: [*proxy], icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/ChatGPT.png' }
+  - { name: GameCN, type: select, <<: *direct, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Game.png' }
+  - { name: InMixed, type: select, <<: *rule, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Server.png' }
+  - { name: WebRTC, type: select, <<: *reject, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Area.png' }
+  # - { name: QUIC, type: select, proxies: [PASS, REJECT-DROP], icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Proxy.png' }
+  - { name: Httpdns, type: select, <<: *reject, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hijacking.png' }
+  - { name: Advert, type: select, <<: *reject, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Advertising.png' }
+  - { name: Update, type: select, proxies: [Local, Proxy], icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Stack.png' }
+  # - { name: 倍率, type: select, proxies: [0x, 0.1x, 0.5x, 0.8x], icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Speedtest.png' }
+  - { name: 香港, <<: *type_ut, proxies: [香港 A, 香港 B, 香港 C, 香港 D], icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hong_Kong.png' }
+  - { name: 香港 A, <<: *type_ut, use: [Provider_1], filter: *filter_hk, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hong_Kong.png', hidden: true }
+  - { name: 香港 B, <<: *type_ut, use: [Provider_2], filter: *filter_hk, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hong_Kong.png', hidden: true }
+  - { name: 香港 C, <<: *type_ut, use: [Provider_3], filter: *filter_hk, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hong_Kong.png', hidden: true }
+  - { name: 香港 D, <<: *type_ut, use: [Provider_4], filter: *filter_hk, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hong_Kong.png', hidden: true }
+  - { name: 台湾, <<: *type_ut, proxies: [台湾 A, 台湾 B, 台湾 C, 台湾 D], icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Taiwan.png' }
+  - { name: 台湾 A, <<: *type_ut, use: [Provider_1], filter: *filter_tw, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Taiwan.png', hidden: true }
+  - { name: 台湾 B, <<: *type_ut, use: [Provider_2], filter: *filter_tw, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Taiwan.png', hidden: true }
+  - { name: 台湾 C, <<: *type_ut, use: [Provider_3], filter: *filter_tw, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Taiwan.png', hidden: true }
+  - { name: 台湾 D, <<: *type_ut, use: [Provider_4], filter: *filter_tw, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Taiwan.png', hidden: true }
+  - { name: 韩国, <<: *type_ut, proxies: [韩国 A, 韩国 B, 韩国 C, 韩国 D], icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Korea.png' }
+  - { name: 韩国 A, <<: *type_ut, use: [Provider_1], filter: *filter_kr, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Korea.png', hidden: true }
+  - { name: 韩国 B, <<: *type_ut, use: [Provider_2], filter: *filter_kr, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Korea.png', hidden: true }
+  - { name: 韩国 C, <<: *type_ut, use: [Provider_3], filter: *filter_kr, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Korea.png', hidden: true }
+  - { name: 韩国 D, <<: *type_ut, use: [Provider_4], filter: *filter_kr, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Korea.png', hidden: true }
+  - { name: 日本, <<: *type_ut, proxies: [日本 A, 日本 B, 日本 C, 日本 D], icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Japan.png' }
+  - { name: 日本 A, <<: *type_ut, use: [Provider_1], filter: *filter_jp, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Japan.png', hidden: true }
+  - { name: 日本 B, <<: *type_ut, use: [Provider_2], filter: *filter_jp, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Japan.png', hidden: true }
+  - { name: 日本 C, <<: *type_ut, use: [Provider_3], filter: *filter_jp, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Japan.png', hidden: true }
+  - { name: 日本 D, <<: *type_ut, use: [Provider_4], filter: *filter_jp, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Japan.png', hidden: true }
+  - { name: 狮城, <<: *type_ut, proxies: [狮城 A, 狮城 B, 狮城 C, 狮城 D], icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Singapore.png' }
+  - { name: 狮城 A, <<: *type_ut, use: [Provider_1], filter: *filter_sg, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Singapore.png', hidden: true }
+  - { name: 狮城 B, <<: *type_ut, use: [Provider_2], filter: *filter_sg, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Singapore.png', hidden: true }
+  - { name: 狮城 C, <<: *type_ut, use: [Provider_3], filter: *filter_sg, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Singapore.png', hidden: true }
+  - { name: 狮城 D, <<: *type_ut, use: [Provider_4], filter: *filter_sg, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Singapore.png', hidden: true }
+  - { name: 美国, <<: *type_ut, proxies: [美国 A, 美国 B, 美国 C, 美国 D], icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_States.png' }
+  - { name: 美国 A, <<: *type_ut, use: [Provider_1], filter: *filter_us, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_States.png', hidden: true }
+  - { name: 美国 B, <<: *type_ut, use: [Provider_2], filter: *filter_us, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_States.png', hidden: true }
+  - { name: 美国 C, <<: *type_ut, use: [Provider_3], filter: *filter_us, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_States.png', hidden: true }
+  - { name: 美国 D, <<: *type_ut, use: [Provider_4], filter: *filter_us, icon: 'https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_States.png', hidden: true }
+  - { name: Fallback, <<: [*type_fb, *out], hidden: true }
+  - { name: 以太网 + WLAN, <<: *type_lb-rr, proxies: [以太网, WLAN], hidden: true }
+  - { name: data0 + wlan0, <<: *type_lb-rr, proxies: [rmnet_data0, wlan0], hidden: true }
+  - { name: data0 + wlan1, <<: *type_lb-rr, proxies: [rmnet_data0, wlan1], hidden: true }
+  - { name: data1 + wlan0, <<: *type_lb-rr, proxies: [rmnet_data1, wlan0], hidden: true }
+  - { name: data1 + wlan1, <<: *type_lb-rr, proxies: [rmnet_data1, wlan1], hidden: true }
+  - { name: Baidu LR, url: 'https://connectivitycheck.platform.hicloud.com/generate_204', interval: 0, timeout: 3500, max-failed-times: 2, expected-status: 204, <<: *type_lb-rr, use: [Provider_Baidu], exclude-filter: Resolution, hidden: true }
+
+rule-providers-anchor:
+  # 锚点 如合并时有重复的项,则不会去合并; 锚点名尽量不要含特殊字符
+  # - &rule_asn { type: http,behavior: ipcidr,format: mrs,proxy: Update,interval: 86400 }
+  - &rule { type: http, behavior: classical, format: text, proxy: Update, interval: 86400 }
+  - &site_rule { type: http, behavior: domain, format: mrs, proxy: Update, interval: 86400 }
+  - &ip_rule { type: http, behavior: ipcidr, format: mrs, proxy: Update, interval: 86400 }
+
+rule-providers:
+  # 对于去广告,按 IP 地理信息分流等需要大量规则的场景,建议使用 domain 或 ipcidr 类型的规则集合,这能有效降低内存占用并提高匹配速度
+  # 不建议使用大量 classical 类型的规则集合。此类规则只能进行顺序匹配，会显著增加匹配耗时和内存占用
+  site_private: { <<: *site_rule, path: ./rule_providers/domain/private, url: 'https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/private.mrs' }
+  # site_ad: { <<: *site_rule, path: ./rule_providers/domain/category-ads-all, url: 'https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ads-all.mrs' }
+  site_ad: { <<: *site_rule, path: ./rule_providers/domain/adrules, url: 'https://testingcf.jsdelivr.net/gh/Cats-Team/AdRules@main/adrules-mihomo.mrs' }
+  # site_ad: { <<: *site_rule, path: ./rule_providers/domain/anti-ad, url: 'https://testingcf.jsdelivr.net/gh/privacy-protection-tools/anti-ad.github.io@master/docs/mihomo.mrs' }
+  # site_ad: { <<: *site_rule, path: ./rule_providers/domain/awavenue-ads-rule, url: 'https://testingcf.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash.mrs' }
+  # site_ad: { <<: *site_rule, path: ./rule_providers/domain/dns-blocklists, url: 'https://testingcf.jsdelivr.net/gh/yiteei/Share@Proxy/rules/site/dns-blocklists.mrs' }
+  site_httpdns: { <<: *site_rule, path: ./rule_providers/domain/httpdns, url: 'https://testingcf.jsdelivr.net/gh/yiteei/Share@Proxy/rules/site/httpdns.mrs' }
+  site_webrtc:
+    type: inline
+    <<: *site_rule
+    payload:
+      - '+.stun.*'
+      - '+.stun*.*'
+      - '+.stun.*.*'
+      - '+.stun*.*.*'
+      - '+.stun.*.*.*'
+      - '+.stun*.*.*.*'
+      - '+.turn.*'
+      - '+.turn*.*'
+      - '+.turn.*.*'
+      - '+.turn*.*.*'
+      - '+.turn.*.*.*'
+      - '+.turn*.*.*.*'
+      - 'fwa.lifesizecloud.com'
+      - 'hw-v2-web-player-tracker.biliapi.net'
+      - 'iphone-stun.strato-iphone.de'
+      - 'ipv4.am.i.mullvad.net'
+      - 'ipv6.am.i.mullvad.net'
+      - 'meet-jit-si-turnrelay.jitsi.net'
+      - 'numb.viagenie'
+      - 'relay.webwormhole.io'
+      - 's1.taraba.net'
+      - 's1.voipstation.jp'
+      - 's2.taraba.net'
+      - 's2.voipstation.jp'
+  site_googlefcm: { <<: *site_rule, path: ./rule_providers/domain/googlefcm, url: 'https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/googlefcm.mrs' }
+  site_telegram: { <<: *site_rule, path: ./rule_providers/domain/telegram, url: 'https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/telegram.mrs' }
+  site_wechat:
+    type: inline
+    <<: *site_rule
+    payload:
+      - 'short.weixin.qq.com'
+      - '+short.weixin.qq.com'
+      - 'long.weixin.qq.com'
+      - '+long.weixin.qq.com'
+  site_youtube: { <<: *site_rule, path: ./rule_providers/domain/youtube, url: 'https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/youtube.mrs' }
+  site_win-update: { <<: *site_rule, path: ./rule_providers/domain/win-update, url: 'https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/win-update.mrs' }
+  site_onedrive: { <<: *site_rule, path: ./rule_providers/domain/onedrive, url: 'https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/onedrive.mrs' }
+  site_category-games@cn: { <<: *site_rule, path: ./rule_providers/domain/category-games@cn, url: 'https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-games@cn.mrs' }
+  site_cn-lite: { <<: *site_rule, path: ./rule_providers/domain/cn-lite, url: 'https://testingcf.jsdelivr.net/gh/yiteei/Share@Proxy/rules/site/cn-lite.mrs' }
+  site_cn: { <<: *site_rule, path: ./rule_providers/domain/cn, url: 'https://testingcf.jsdelivr.net/gh/yiteei/Share@Proxy/rules/site/cn.mrs' }
+  site_fake-ip:
+    type: inline
+    <<: *site_rule
+    payload:
+      - '+.market.xiaomi.com'
+      - '*.bilivideo.com'
+      - '+.msftconnecttest.com'
+      - '+.ntp.*' # NTP
+      - '+.ntp.*.*'
+      - '+.ntp*.*.*'
+      - '+.ntp.*.*.*'
+      - '+.ntp.*.*.*.*'
+      - '+.time.*'
+      - '+.time.*.*'
+      - '+.time*.*.*'
+      - '+.*time.*.*'
+      - '+.time.*.*.*'
+      - '+.stun.*' # WebRTC
+      - '+.stun*.*'
+      - '+.stun.*.*'
+      - '+.stun*.*.*'
+      - '+.stun.*.*.*'
+      - '+.stun*.*.*.*'
+      - '+.turn.*'
+      - '+.turn*.*'
+      - '+.turn.*.*'
+      - '+.turn*.*.*'
+      - '+.turn.*.*.*'
+      - '+.turn*.*.*.*'
+      - 'fwa.lifesizecloud.com'
+      - 'hw-v2-web-player-tracker.biliapi.net'
+      - 'iphone-stun.strato-iphone.de'
+      - 'ipv4.am.i.mullvad.net'
+      - 'ipv6.am.i.mullvad.net'
+      - 'meet-jit-si-turnrelay.jitsi.net'
+      - 'numb.viagenie'
+      - 'relay.webwormhole.io'
+      - 's1.taraba.net'
+      - 's1.voipstation.jp'
+      - 's2.taraba.net'
+      - 's2.voipstation.jp'
+
+  ip_private: { <<: *ip_rule, path: ./rule_providers/ipcidr/private, url: 'https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/private.mrs' }
+  ip_httpdns: { <<: *ip_rule, path: ./rule_providers/ipcidr/httpdns, url: 'https://testingcf.jsdelivr.net/gh/yiteei/Share@Proxy/rules/ip/httpdns.mrs' }
+  ip_webrtc:
+    type: inline
+    <<: *ip_rule
+    payload:
+      - '124.64.206.224/32'
+      - '23.21.150.121/32'
+      - '39.107.142.158/32'
+  ip_telegram: { <<: *ip_rule, path: ./rule_providers/ipcidr/telegram, url: 'https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/telegram.mrs' }
+  ip_cn: { <<: *ip_rule, path: ./rule_providers/ipcidr/cn, url: 'https://testingcf.jsdelivr.net/gh/yiteei/Share@Proxy/rules/ip/cn.mrs' }
+
+  flexireject:
+    type: inline
+    <<: *rule
+    payload:
+      - DOMAIN,ic.adobe.io # Adobe 正版弹窗
+      - DOMAIN-REGEX,^[a-z\d]{10}\.adobe\.io$
+      - DOMAIN-SUFFIX,adobestats.io
+      - DOMAIN,cc-api-data.adobe.io
+      - DOMAIN,wetype.weixin.qq.com # 微信输入法
+      - IP-CIDR,95.161.76.100/31,no-resolve # 防止 Telegram 转圈
+  flexirule:
+    type: inline
+    <<: *rule
+    payload:
+      - DOMAIN-SUFFIX,deepseek.com # DeepSeek
+
+rules:
+  # 分流规则可以直接引用代理或策略组,但不能引用远程代理集; 对于每一条连接,总是从上到下匹配规则; 需要复杂条件时,可以用逻辑运算符去组合多个规则. 并且逻辑规则是可以相互嵌套的
+  - AND,((DST-PORT,53),(NOT,((IN-TYPE,Inner)))),dns-hijack # 劫持 DNS 到 Clash 内部 DNS 模块
+  - RULE-SET,ip_private,Local,no-resolve # 局域网..
+  - RULE-SET,site_private,Local
+  - AND,((NETWORK,udp),(RULE-SET,site_webrtc)),WebRTC # 是否禁用 stun/turn 协议的 UDP 数据,禁用后可以有效解决 WebRTC 的 IP 泄露
+  - RULE-SET,flexireject,REJECT-DROP # 自定义拦截
+  - RULE-SET,site_ad,Advert
+  # - AND,((NETWORK,udp),(NOT,((OR,(RULE-SET,site_cn),(RULE-SET,ip_cn))))),QUIC # 除 CN 以外的 QUIC ,HTTP3/QUIC 协议基于 UDP,在某些代理协议中 UDP 转发效率较低. 可以通过逻辑规则来禁用 QUIC 协议
+  - RULE-SET,flexirule,FlexiRule # 自定义代理
+  - AND,((DST-PORT,5228-5230),(RULE-SET,site_googlefcm)),Message # Google FCM,直连确保 DNS 无污染/劫持
+  - RULE-SET,site_wechat,WeChat # 微信 自定义
+  - RULE-SET,site_telegram,Telegram
+  - RULE-SET,site_youtube,YouTube
+  - RULE-SET,site_onedrive,OneDrive
+  - RULE-SET,site_win-update,Update # Windows 更新
+  - RULE-SET,site_category-games@cn,GameCN
+  - IN-NAME,in_mixed,InMixed # 混合入站,我用来控制下载等..
+  - RULE-SET,site_cn-lite,CNLite
+  - RULE-SET,site_cn,Local
+
+  - RULE-SET,ip_httpdns,Httpdns
+  - AND,((NETWORK,udp),(RULE-SET,ip_webrtc)),WebRTC
+  - RULE-SET,ip_telegram,Telegram
+  - RULE-SET,ip_cn,Local
+  - MATCH,Proxy # 无条件匹配所有请求

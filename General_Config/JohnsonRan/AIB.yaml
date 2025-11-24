@@ -1,0 +1,274 @@
+# 策略组相关
+pr: &pr {type: select, proxies: [节点选择, 香港, 台湾, 日本, 新加坡, 美国, 其他, DIRECT]}
+url-test: &url-test {type: url-test, url: https://www.gstatic.com/generate_204, interval: 300, include-all-providers: true, exclude-filter: "LAN"}
+fallback: &fallback {type: fallback, url: https://www.gstatic.com/generate_204, interval: 300, include-all-providers: true, exclude-filter: "LAN"}
+load-balance: &load-balance {type: load-balance, url: https://www.gstatic.com/generate_204, interval: 300, include-all-providers: true, strategy: sticky-sessions, exclude-filter: "LAN"}
+# 这里是订阅更新和延迟测试相关的
+p: &p {type: http, interval: 86400, health-check: {enable: true, url: https://www.gstatic.com/generate_204, interval: 300}}
+
+proxies:
+  - {name: LAN, type: direct, udp: true, interface-name: br-lan}
+
+# https://hub.docker.com/r/xream/sub-store
+proxy-providers:
+  Sub-Store:
+    <<: *p
+    url: "此处填入你的订阅地址"
+
+mixed-port: 7890
+ipv6: true
+log-level: silent
+allow-lan: true
+skip-auth-prefixes:
+- 127.0.0.0/8
+- 172.16.0.0/12
+- 192.168.0.0/16
+unified-delay: true
+tcp-concurrent: true
+external-ui: ui
+external-ui-name: zashboard
+external-controller: 0.0.0.0:9090
+external-ui-url: https://github.com/Zephyruso/zashboard/archive/refs/heads/gh-pages.zip
+
+keep-alive-idle: 600
+keep-alive-interval: 60
+
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+sniffer:
+  enable: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+  skip-domain:
+    - "Mijia Cloud"
+    - "+.push.apple.com"
+
+tun:
+  enable: true
+  stack: system
+  gso: true
+  gso-max-size: 65536
+  auto-route: true
+  auto-redirect: true
+  auto-detect-interface: true
+
+dns:
+  enable: true
+  cache-algorithm: arc
+  ipv6: true
+  listen: 0.0.0.0:1053
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.0/15
+  fake-ip-range6: 3fff::/20
+  fake-ip-filter: 
+    - "rule-set:no-fakeip"
+    - "rule-set:chinadomains"
+    - "rule-set:cn_site"
+  respect-rules: true
+  nameserver:
+    - https://8.8.8.8/dns-query
+    - https://208.67.222.2/dns-query
+  direct-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  proxy-server-nameserver:
+    - system
+    - 223.5.5.5
+  nameserver-policy:
+    "*": 127.0.0.1#lo
+    "+.lan": 127.0.0.1#lo
+    "+.arpa": 127.0.0.1#lo
+    "+.local": 127.0.0.1#lo
+    "+.ts.net": 127.0.0.1#tailscale0
+    "rule-set:ecs-no-cn":
+      - '223.5.5.5#ecs=61.221.31.1/24&ecs-override=true'
+
+ntp:
+  enable: true
+  write-to-system: true
+
+experimental:
+  quic-go-disable-gso: false
+  quic-go-disable-ecn: false
+
+proxy-groups:
+  - {name: 节点选择, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/sub(1).png, type: select, proxies: [自动选择, 香港, 台湾, 日本, 新加坡, 美国, 其他, DIRECT]}
+  - {name: 自动选择, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/lightning(2).png, <<: *fallback}
+  - {name: Speedtest, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/speedtest.png, type: select, proxies: [DIRECT, 节点选择, 香港, 台湾, 日本, 新加坡, 美国]}
+  - {name: Emby, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/emby.png, <<: *pr}
+  - {name: AI, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/ChatGPT-green.png, <<: *pr}
+  - {name: Steam, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/steam.png, <<: *pr}
+  - {name: Apple, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/apple.png, type: select, proxies: [美国, 香港, 台湾, 日本, 新加坡, DIRECT]}
+  - {name: Github, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/github.png, <<: *pr}
+  - {name: Telegram, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/telegram(blue1).png, <<: *pr}
+  - {name: Google, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/google(1).png, <<: *pr}
+  - {name: YouTube, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/youtube.png, <<: *pr}
+  - {name: Tracker, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/direct.png, type: select, proxies: [DIRECT, 香港, 台湾, 日本, 新加坡, 美国]}
+  - {name: Porns, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/yuyanyun.png, <<: *pr}
+  - {name: Bilibili, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/bilibili(1).png, type: select, proxies: [DIRECT, 香港, 台湾]}
+  - {name: Microsoft, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/microsoft.png, <<: *pr}
+  - {name: ADBlock, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/ad(6).png, type: select, proxies: [REJECT, DIRECT]}
+  - {name: MATCH, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/shutiao.png, <<: *pr}
+
+# 分隔,下面是地区分组
+  - {name: 香港, <<: *url-test, filter: "🇭🇰|香港|HK|Hong", icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/Hongkong(2).png}
+  - {name: 美国, <<: *url-test, filter: "🇺🇸|美国|US|United States", icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/US(1).png}
+  - {name: 新加坡, <<: *url-test, filter: "🇸🇬|新加坡|狮|SG|Singapore", icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/singapore(2).png}
+  - {name: 日本, <<: *url-test, filter: "🇯🇵|日本|东京|JP|Japan", icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/Japan(1).png}
+  - {name: 台湾, <<: *url-test, filter: "🇨🇳|🇹🇼|台湾|TW|Tai|Taiwan", icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/taiwan.png}
+  - {name: 低倍率, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/duck(1).png, <<: *fallback, filter: "(?i)(0\\.\\d+)"}
+  - {name: 其他, icon: https://github.com/lige47/QuanX-icon-rule/raw/main/icon/XXAI.png, type: select, include-all-providers: true, exclude-filter: "HK|US|SG|JP|TW|LAN"}
+
+rules:
+  - DST-PORT,6881-6999,ADBlock #FUCK WPS
+  - DST-PORT,3478/19302,DIRECT
+  - GEOIP,lan,LAN,no-resolve
+  - RULE-SET,custom_proxy,节点选择
+  - RULE-SET,custom_reject,ADBlock
+  - RULE-SET,custom_direct,DIRECT
+  - RULE-SET,ADs_merged,ADBlock
+  - RULE-SET,httpdns,ADBlock
+  - RULE-SET,category-cngames,DIRECT
+  - RULE-SET,win-update,DIRECT
+  - RULE-SET,apple-cn,DIRECT
+  - RULE-SET,speedtest,Speedtest
+  - RULE-SET,apple_proxy,Apple
+  - RULE-SET,biliintl,节点选择
+  - RULE-SET,tracker,Tracker
+  - RULE-SET,ai,AI
+  - RULE-SET,youtube,YouTube
+  - RULE-SET,google_site,Google
+  - RULE-SET,google_ip,Google
+  - RULE-SET,category-porn,Porns
+  - RULE-SET,bilibili,Bilibili
+  - RULE-SET,tg_site,Telegram
+  - RULE-SET,tg_ip,Telegram
+  - RULE-SET,github,Github
+  - RULE-SET,microsoft,Microsoft
+  - RULE-SET,bahamut,台湾
+  - RULE-SET,emby,Emby
+  - RULE-SET,steamcn,DIRECT
+  - RULE-SET,steam,Steam
+  - RULE-SET,gfwlist,节点选择
+  - RULE-SET,chinadomains,DIRECT
+  - RULE-SET,cn_site,DIRECT
+  - RULE-SET,cn_ip,DIRECT
+  - MATCH,MATCH
+
+rule-anchor:
+  ip: &ip {type: http, interval: 86400, behavior: ipcidr, format: yaml}
+  domain: &domain {type: http, interval: 86400, behavior: domain, format: yaml}
+  domaintxt: &domaintxt {type: http, interval: 86400, behavior: domain, format: text}
+  classical: &classical {type: http, interval: 86400, behavior: classical, format: yaml}
+  classicaltxt: &classicaltxt {type: http, interval: 86400, behavior: classical, format: text}
+  mrs: &mrs {type: http, interval: 86400, behavior: domain, format: mrs}
+  mrsip: &mrsip {type: http, interval: 86400, behavior: ipcidr, format: mrs}
+
+# https://wiki.metacubex.one/config/syntax/#_7
+# https://wiki.metacubex.one/config/rule-providers/content/#rule-providers
+rule-providers:
+  custom_direct:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/JohnsonRan/CRules/master/rules/custom.yaml"
+  custom_proxy:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/JohnsonRan/CRules/master/rules/customProxy.yaml"
+  custom_reject:
+    <<: *domaintxt
+    url: "https://raw.githubusercontent.com/JohnsonRan/CRules/master/rules/reject.txt"
+  emby:
+    <<: *classicaltxt
+    url: "https://raw.githubusercontent.com/Repcz/Tool/X/Surge/Rules/Emby.list"
+  ai:
+    <<: *mrs
+    url: "https://raw.githubusercontent.com/JohnsonRan/CRules/mihomo/rules/AIs_merged.mrs"
+  ADs_merged:
+    <<: *mrs
+    url: "https://raw.githubusercontent.com/JohnsonRan/CRules/mihomo/rules/ADs_merged.mrs"
+  biliintl:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo-lite/geosite/biliintl.mrs"
+  tracker:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/tracker.mrs"
+  youtube:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/youtube.mrs"
+  google_site:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/google.mrs"
+  google_ip:
+    <<: *mrsip
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geoip/google.mrs"
+  category-porn:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/category-porn.mrs"
+  category-cngames:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/category-games@cn.mrs"
+  bilibili:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/bilibili.mrs"
+  tg_ip:
+    <<: *mrsip
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geoip/telegram.mrs"
+  tg_site:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/telegram.mrs"
+  github:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/github.mrs"
+  microsoft:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/microsoft.mrs"
+  win-update:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/win-update.mrs"
+  bahamut:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/bahamut.mrs"
+  cn_site:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/cn.mrs"
+  chinadomains:
+    <<: *classicaltxt
+    url: "https://ruleset.skk.moe/Clash/non_ip/domestic.txt" 
+  cn_ip:
+    <<: *mrsip
+    url: "https://github.com/ForestL18/rules-dat/raw/mihomo/asn/combined/China-ASN-combined.mrs"
+  httpdns:
+    <<: *mrs 
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/category-httpdns-cn.mrs"
+  apple-cn:	
+    <<: *mrs 
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/apple-cn.mrs"
+  apple_proxy:
+    <<: *classicaltxt
+    url: "https://raw.ihtw.moe/github.com/Repcz/Tool/raw/X/mihomo/Rules/AppleProxy.list"
+  speedtest:
+    <<: *domaintxt
+    url: "https://ruleset.skk.moe/Clash/domainset/speedtest.txt"
+  gfwlist:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/gfw.mrs"
+  steamcn:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/steam@cn.mrs"
+  steam:
+    <<: *mrs
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/steam.mrs"
+  no-fakeip:
+    <<: *domaintxt
+    url: "https://raw.githubusercontent.com/JohnsonRan/CRules/master/rules/no-fakeip.txt"
+  ecs-no-cn:
+    <<: *domaintxt
+    url: "https://raw.githubusercontent.com/JohnsonRan/CRules/master/rules/ecs-no-cn.txt"
+

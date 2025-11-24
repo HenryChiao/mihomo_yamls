@@ -1,7 +1,11 @@
-name: Update File Test
+Name: Update File Test
 
 on:
   workflow_dispatch: # 允许手动触发
+
+# --- [修复核心] 添加写入权限 ---
+permissions:
+  contents: write
 
 jobs:
   update-files:
@@ -9,6 +13,8 @@ jobs:
     steps:
       - name: 检查存储库
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }} # 显式指定检出当前触发的分支
 
       - name: 创建分类文件夹并下载配置
         run: |
@@ -46,7 +52,6 @@ jobs:
           mkdir -p "General_Config/666OS"
           curl -s -o "General_Config/666OS/MihomoPro_Config.yaml" \
             "https://raw.githubusercontent.com/666OS/YYDS/main/mihomo/config/MihomoPro.yaml"
-          # [修正] OneTouch 移动至通用配置
           curl -s -o "General_Config/666OS/OneTouch_Config.yaml" \
             "https://raw.githubusercontent.com/666OS/YYDS/main/mihomo/config/OneTouch.yaml"
 
@@ -161,8 +166,12 @@ jobs:
 
       - name: 提交并推送更改
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
+          # 使用 GitHub Actions Bot 标准身份
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
           git add .
-          git commit -m "Update: Add new authors & reclassify 666OS/OneTouch to General" || echo "No changes to commit"
-          git push
+          git commit -m "Update config files" || echo "No changes to commit"
+          
+          # 显式推送到当前触发的分支，避免 detached HEAD 问题
+          git push origin HEAD:${{ github.ref_name }}

@@ -1,0 +1,830 @@
+
+# 订阅频道：https://t.me/i_chl
+# 仓库地址：https://github.com/sunfing/iNg/blob/main/Config/ConfigForClash
+# 本配置文件携带大量的注释，尽可能解释全部代码内容，其余不懂地方建议看官方文档 https://wiki.metacubex.one
+# 初次使用建议详细阅读注释内容并修改必要的内容，如：在“远程代理集”填写订阅链接
+
+# ⚠️⚠️⚠️注意 YAML 文本对缩进非常敏感，若改完后不知道格式是否有误，请务必查看 https://t.me/i_chl/111，并用 YAML 验证器二次检验格式是否有误
+# 远程代理集锚点
+  anchor_proxy_providers: &anchor_proxy_providers
+    type: http
+    interval: 86400 # 单位为秒，定时更新代理列表，24 小时一次
+    health-check:   # 检测代理可用性
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 300 # 单位为秒，定时健康检查，5 分钟一次
+      timeout: 3000 # 单位为毫秒，健康检查超时时间，大于 3 秒判定为失败
+    filter:         # 常用排除，保留不包含下面关键字的节点
+      (?i)^(?!.*(email|expire|test|total|traffic|use|used|版本|备用|不推荐|测试|到期|订阅|工单|官方|官网|官址|过期|获取|机场|客服|联系|流量|群|剩余|失联|套餐|网站|网址|下次|学术|已用|邮箱|有效))
+
+# 代理集
+  # 远程代理集
+  # 要添加更多远程代理集即机场（名字不能重复）自行复制下面的示例模板粘贴添加，注意去掉机场名字前面的“#”且务必注意缩进量
+  # 四种模板任挑一种批量复制粘贴即可添加多个机场，建议小白无脑选择使用“无文件路径”的模板，注意去掉机场名字前面的“#”且务必注意缩进量
+  proxy-providers:
+    机场一:  # 远程代理集名称 ###### 👇👇👇 URL 处填写订阅链接 👇👇👇 ######
+      <<: *anchor_proxy_providers
+      url: "订阅链接"
+      path: ./proxy_providers/Nodes.yaml  # 可选文件路径，不可重复，不同的远程代理集请自行设置不同的路径，亦或是不使用“path”时会使用 url 的 MD5 作为此文件的文件名
+      # override:                           # 覆写节点内容，前/后缀二选一，有多机场混合使用的需求时强烈建议添加前/后缀，避免因节点名重复而无法使用的情况，除此之外还推荐使用 Sub Store(https://t.me/i_chl/29) 订阅管理工具可对节点进行更多个性化修改
+        # additional-prefix: "机场一"
+        # additional-suffix: "机场一"
+
+    # 机场二: {<<: *anchor_proxy_providers, url: "订阅链接", override: {additional-prefix: "机场二"}} # 无文件路径 前缀 模版
+    # 机场三: {<<: *anchor_proxy_providers, url: "订阅链接", override: {additional-suffix: "机场三"}} # 无文件路径 后缀 模版
+    # 机场四: {<<: *anchor_proxy_providers, url: "订阅链接", path: ./proxy_providers/Example.yaml, override: {additional-prefix: "机场四"}} # 有文件路径 前缀 模版
+    # 机场五: {<<: *anchor_proxy_providers, url: "订阅链接", path: ./proxy_providers/Example.yaml, override: {additional-suffix: "机场五"}} # 有文件路径 后缀 模版
+
+  # 本地代理集
+  # 该项可用于远程资源首次下载需要挂梯时（例如：订阅链接域名被墙。一般不需要），可自行添加一个本地代理节点利用该节点下载更新订阅和规则，日常使用可删除或注释本项；亦或是在此添加自建的本地代理节点
+  # proxies:
+    # - { xxx }
+
+# 基础配置
+  port: 7890        # HTTP(S) 代理端口
+  socks-port: 7891  # SOCKS 代理端口
+  mixed-port: 7892  # 混合代理端口，支持 HTTP(S) 和 SOCKS 协议
+  redir-port: 7893  # 透明代理端口，仅代理 TCP 流量，redirect 端口仅限 Linux(Android) 和 macOS 适用
+  tproxy-port: 7894 # 透明代理端口，代理 TCP 和 UDP 流量，tproxy 端口仅限 Linux(Android) 适用
+
+  mode: rule                        # 代理模式
+  log-level: info                   # 日志等级
+  ipv6: false                       # 是否接受 IPv6 流量
+  allow-lan: true                   # 是否允许局域网连接
+  bind-address: "*"                 # 绑定 IP 地址，仅作用于 allow-lan 为 true，“*”表示所有地址
+  unified-delay: false              # 统一延迟，开启时会计算 RTT，以消除连接握手等带来的不同类型节点的延迟差异
+  tcp-concurrent: true              # TCP 并发，TCP 并发请求所有 IP 地址，然后选择延迟最低的一个进行连接
+  disable-keep-alive: false         # 禁用 TCP Keep Alive，false 即启用 Keep-Alive，连接保持开启，允许多个请求复用同一个 TCP 连接
+  find-process-mode: strict         # 进程匹配模式，always 开启，强制匹配所有进程 / strict 默认，由 Clash 判断是否开启 / off 不匹配进程，推荐在路由器上使用此模式
+  global-client-fingerprint: chrome # 全局客户端指纹
+
+  external-controller: 0.0.0.0:9090 # 外部控制
+  external-ui: ui
+  external-ui-url: https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip  # metacubexd
+  # external-ui-url: https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip # zashboard
+  secret: dashboard
+
+  geox-url:               # 自定义 GEO 数据库
+    geoip: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip-lite.dat
+    geosite: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat
+    mmdb: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country-lite.mmdb
+    asn: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb
+  geo-auto-update: true   # 是否自动更新
+  geo-update-interval: 24 # 单位小时，更新间隔，每天更新
+
+  profile:
+    store-selected: true # 储存策略组选择，以供下次启动时使用
+    store-fake-ip: true  # 储存 fake-ip 映射表，域名再次发生连接时使用原有映射地址
+
+  dns:
+    enable: true
+    ipv6: false
+    listen: 0.0.0.0:1053            # DNS 服务监听
+    enhanced-mode: fake-ip          # DNS 处理模式 fake-ip/redir-host
+    fake-ip-range: 198.18.0.1/16    # fake-ip/tun 模式下的 IP 段
+    fake-ip-filter-mode: blacklist  # 匹配模式 blacklist/whitelist，默认 blacklist 匹配成功则不返回 fake-ip，whitelist 匹配成功返回 fake-ip
+    fake-ip-filter:                 # fake-ip 过滤，blacklist 模式下以下地址不会下发 fake-ip 映射用于连接即使用真实 IP 连接
+      ["geosite:cn", "+.lan", "+.local", "+.localhost", "+.direct", "+.example", "+.invalid", "+.test", "+.home.arpa", "time.*.com", "time.*.gov", "time.*.edu.cn", "time.*.apple.com", "time-ios.apple.com", "time1.*.com", "time2.*.com", "time3.*.com", "time4.*.com", "time5.*.com", "time6.*.com", "time7.*.com", "ntp.*.com", "ntp1.*.com", "ntp2.*.com", "ntp3.*.com", "ntp4.*.com", "ntp5.*.com", "ntp6.*.com", "ntp7.*.com", "+.time.edu.cn", "+.ntp.org.cn", "+.pool.ntp.org", "time1.cloud.tencent.com", "+.msftconnecttest.com", "+.msftncsi.com", "stun.*.*", "stun.*.*.*", "+.stun.*.*", "+.stun.*.*.*", "+.stun.*.*.*.*", "+.stun.*.*.*.*.*"]
+    default-nameserver:       # 只用于解析 nameserver 中域名格式的 DNS 服务器，可使用 UDP/DoT/DoH，只能使用纯 IP 地址
+      - 223.5.5.5
+      - 114.114.114.114
+    # direct-nameserver:        # 用于 direct 出口域名解析的 DNS 服务器，如果不填则遵循 nameserver-policy、nameserver 和 fallback 的配置
+      # - system
+    # nameserver-policy:        # 指定域名查询的解析服务器，可使用 geosite，优先于 nameserver/fallback 查询
+      # geosite:cn, private:     # 一般只开启该项
+        # - https://223.5.5.5/dns-query
+        # - https://120.53.53.53/dns-query
+      # geosite:gfw, geolocation-!cn:
+        # - https://1.1.1.1/dns-query
+        # - https://8.8.8.8/dns-query
+    nameserver:               # 默认域名解析服务器，除 nameserver-policy 指定规则外的所有域名都由 nameserver 解析，默认走代理
+      - 223.5.5.5
+      - 114.114.114.114
+    # respect-rules: true       # DNS 连接遵守路由规则，需配置 proxy-server-nameserver
+    # proxy-server-nameserver:  # 节点域名解析服务器，仅用于解析代理节点的域名，不填则遵循 nameserver-policy、nameserver 和 fallback 的配置
+      # - https://223.5.5.5/dns-query
+      # - https://120.53.53.53/dns-query
+    # fallback:                 # 后备域名解析服务器，一般情况下使用境外 DNS，保证结果可信，配置 fallback 后默认启用 fallback-filter，geoip-code 为 cn
+      # - tls://8.8.4.4
+      # - tls://1.1.1.1
+    # fallback-filter:          # 后备域名解析服务器筛选，满足条件的将使用 fallback 结果或只使用 fallback 解析
+      # geoip: true
+      # geoip-code:cn
+      # geosite:
+        # - gfw
+      # ipcidr:
+        # - 240.0.0.0/4
+      # domain:
+        # - "+.google.com"
+        # - "+.facebook.com"
+        # - "+.youtube.com"
+
+  sniffer:
+    enable: true
+    parse-pure-ip: true         # 对所有未获取到域名的流量进行强制嗅探
+    force-dns-mapping: true     # 对 redir-host 类型识别的流量进行强制嗅探
+    override-destination: true  # 是否使用嗅探结果作为实际访问
+    sniff:
+      HTTP:
+        ports: [80, 8080-8880]
+        override-destination: true
+      TLS:
+        ports: [443, 8443]
+      QUIC:
+        ports: [443, 8443]
+    force-domain:               # 强制进行嗅探的域名
+      - "+.v2ex.com"
+    skip-domain:                # 跳过嗅探的域名
+      - "+.push.apple.com"
+
+  tun:
+    enable: false
+    stack: mixed                # system/gvisor/mixed
+    dns-hijack:
+      - "any:53"
+    auto-route: true            # 自动设置全局路由，可以自动将全局流量路由进入 tun 网卡
+    # auto-redirect: true         # 仅支持 Linux，自动配置 iptables/nftables 以重定向 TCP 连接
+    auto-detect-interface: true # 自动选择流量出口接口，多出口网卡同时连接的设备建议手动指定出口网卡
+
+# 策略组锚点
+  # 所有规则集配置
+  anchor_policy_groups_all: &anchor_policy_groups_all
+    type: select
+    proxies: [🎯 全球直连, 🚀 默认代理, 💽 观影节点, 💽 观影自动, 🎬 流媒体集, 🎬 流媒自动, ❤ 省流节点, ❤ 省流自动, 🇭🇰 港流媒体, 🇨🇳 台流媒体, 🇸🇬 狮流媒体, 🇯🇵 日流媒体, 🇺🇸 美流媒体, 🇭🇰 香港手动, 🇨🇳 台湾手动, 🇸🇬 狮城手动, 🇯🇵 日本手动, 🇺🇸 美国手动, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🏠 家宽自选, 🥵 常用自选, 🥶 冷门自选, 🍟 节点集合]
+  # 默认规则集配置
+  anchor_policy_groups_default: &anchor_policy_groups_default
+    type: select
+    proxies: [🎯 全球直连, 🚀 默认代理, ❤ 省流节点, ❤ 省流自动, 🇭🇰 香港手动, 🇨🇳 台湾手动, 🇸🇬 狮城手动, 🇯🇵 日本手动, 🇺🇸 美国手动, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🏠 家宽自选, 🥵 常用自选, 🥶 冷门自选, 🍟 节点集合]
+  # 即时通讯规则集配置
+  anchor_policy_groups_message: &anchor_policy_groups_message
+    type: select
+    proxies: [🎯 全球直连, 🚀 默认代理, 💬 即时通讯, ❤ 省流节点, ❤ 省流自动, 🇭🇰 香港手动, 🇨🇳 台湾手动, 🇸🇬 狮城手动, 🇯🇵 日本手动, 🇺🇸 美国手动, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🏠 家宽自选, 🥵 常用自选, 🥶 冷门自选, 🍟 节点集合]
+  # 新闻社交规则集配置
+  anchor_policy_groups_newssocialize: &anchor_policy_groups_newssocialize
+    type: select
+    proxies: [🎯 全球直连, 🚀 默认代理, 📰 新闻社交, ❤ 省流节点, ❤ 省流自动, 🇭🇰 香港手动, 🇨🇳 台湾手动, 🇸🇬 狮城手动, 🇯🇵 日本手动, 🇺🇸 美国手动, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🏠 家宽自选, 🥵 常用自选, 🥶 冷门自选, 🍟 节点集合]
+  # 语言模型规则集配置
+  anchor_policy_groups_aigc: &anchor_policy_groups_aigc
+    type: select
+    proxies: [🎯 全球直连, 🚀 默认代理, 🎨 语言模型, ❤ 省流节点, ❤ 省流自动, 🇭🇰 香港手动, 🇨🇳 台湾手动, 🇸🇬 狮城手动, 🇯🇵 日本手动, 🇺🇸 美国手动, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🏠 家宽自选, 🥵 常用自选, 🥶 冷门自选, 🍟 节点集合]
+  # 流媒体集规则集配置
+  anchor_policy_groups_streammedia: &anchor_policy_groups_streammedia
+    type: select
+    proxies: [🎯 全球直连, 🚀 默认代理, 🎬 流媒体集, 🎬 流媒自动, ❤ 省流节点, ❤ 省流自动, 🇭🇰 港流媒体, 🇨🇳 台流媒体, 🇸🇬 狮流媒体, 🇯🇵 日流媒体, 🇺🇸 美流媒体, 🇭🇰 香港手动, 🇨🇳 台湾手动, 🇸🇬 狮城手动, 🇯🇵 日本手动, 🇺🇸 美国手动, 🏠 家宽自选, 🥵 常用自选, 🥶 冷门自选, 🍟 节点集合]
+
+# 节点组锚点
+  # 手动切换规则集配置
+  anchor_node_groups_selector: &anchor_node_groups_selector
+    type: select
+    include-all: true   # 引入所有本地和远程代理集节点，节点顺序按照名称排序
+  # 自动选择规则集配置
+  anchor_node_groups_urltest: &anchor_node_groups_urltest
+    type: url-test
+    url: http://www.gstatic.com/generate_204
+    interval: 300       # 单位为秒，健康检查时间间隔，5 分钟一次
+    tolerance: 20       # 单位为毫秒，节点切换容差，若当前节点的延迟超过了最佳节点延迟加上 tolerance 的值，系统就会尝试切换到另一个延迟更低的节点
+    timeout: 3000       # 单位为毫秒，健康检查超时时间，大于 3 秒判定为失败
+    max-failed-times: 3 # 默认 5 次，超过最大失败次数则触发一次强制健康检查
+    lazy: true          # 默认为 true，未选择到当前策略组时，不进行健康检查和延迟测试
+    disable-udp: false  # 是否禁用该策略组的 UDP
+    include-all: true   # 引入所有本地和远程代理集节点，节点顺序按照名称排序
+    # hidden: true        # 是否隐藏策略组展示，需前端适配
+
+# 代理组
+  proxy-groups:
+    # 策略组
+      # 大类速选策略组
+      - name: 🚀 默认代理
+        type: select
+        proxies: [🎯 全球直连, 🚫 全球拦截, ❤ 省流节点, ❤ 省流自动, 🇭🇰 香港手动, 🇨🇳 台湾手动, 🇸🇬 狮城手动, 🇯🇵 日本手动, 🇺🇸 美国手动, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🏠 家宽自选, 🥵 常用自选, 🥶 冷门自选, 🍟 节点集合]
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/ClashMeta.png
+
+      - name: 📢 谷歌推送
+        <<: *anchor_policy_groups_default
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Speaker.png
+
+      - name: 💬 即时通讯
+        <<: *anchor_policy_groups_default
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Message.png
+
+      - name: 📰 新闻社交
+        <<: *anchor_policy_groups_default
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/News.png
+
+      - name: 🎨 语言模型
+        <<: *anchor_policy_groups_default
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/AIGC.png
+
+      - name: 🎬 流媒体集
+        type: select
+        proxies: [🎯 全球直连, 🚀 默认代理, ❤ 省流节点, ❤ 省流自动, 🇭🇰 港流媒体, 🇨🇳 台流媒体, 🇸🇬 狮流媒体, 🇯🇵 日流媒体, 🇺🇸 美流媒体, 🇭🇰 香港手动, 🇨🇳 台湾手动, 🇸🇬 狮城手动, 🇯🇵 日本手动, 🇺🇸 美国手动, 🏠 家宽自选, 🥵 常用自选, 🥶 冷门自选, 🍟 节点集合]
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Clapper.png
+
+      - name: 🎬 流媒自动
+        type: url-test
+        url: http://www.gstatic.com/generate_204
+        interval: 300
+        tolerance: 20
+        timeout: 3000
+        max-failed-times: 3
+        lazy: true
+        disable-udp: false
+        proxies: [🇭🇰 港流媒体, 🇨🇳 台流媒体, 🇸🇬 狮流媒体, 🇯🇵 日流媒体, 🇺🇸 美流媒体]
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Clapper.png
+        # hidden: true
+
+      # 节点测速策略组
+      - name: ⚡ 速度测试
+        type: select
+        proxies: [🎯 全球直连, 🚀 默认代理, 🍟 节点集合]
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Speedtest.png
+      
+      # 细分套娃策略组
+      - name: 📲 电报消息
+        <<: *anchor_policy_groups_message
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Telegram.png
+
+      - name: 🎙 语音社群
+        <<: *anchor_policy_groups_message
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Discord.png
+
+      - name: 🍎 苹果新闻
+        <<: *anchor_policy_groups_newssocialize
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/AppleNews.png
+
+      - name: 📮 推特推特
+        <<: *anchor_policy_groups_newssocialize
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Twitter.png
+
+      - name: 🌈 晒照片墙
+        <<: *anchor_policy_groups_newssocialize
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Instagram.png
+
+      - name: ✨ ChatGPT
+        <<: *anchor_policy_groups_aigc
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/OpenAI1.png
+
+      - name: ✨ Claude
+        <<: *anchor_policy_groups_aigc
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/ClaudeAI.png
+
+      - name: ✨ Gemini
+        <<: *anchor_policy_groups_aigc
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Gemini.png
+
+      - name: ✨ Copilot
+        <<: *anchor_policy_groups_aigc
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Copilot.png
+
+      - name: 📀 媒体影院
+        type: select
+        proxies: [🎯 全球直连, 🚀 默认代理, 💽 观影节点, 💽 观影自动, 🎬 流媒体集, 🎬 流媒自动, ❤ 省流节点, ❤ 省流自动, 🇭🇰 港流媒体, 🇨🇳 台流媒体, 🇸🇬 狮流媒体, 🇯🇵 日流媒体, 🇺🇸 美流媒体, 🇭🇰 香港手动, 🇨🇳 台湾手动, 🇸🇬 狮城手动, 🇯🇵 日本手动, 🇺🇸 美国手动, 🏠 家宽自选, 🥵 常用自选, 🥶 冷门自选, 🍟 节点集合]
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Emby.png
+
+      - name: 🎶 声田音乐
+        <<: *anchor_policy_groups_streammedia
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Spotify.png
+
+      - name: 🎶 油管音乐
+        <<: *anchor_policy_groups_streammedia
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/YouTubeMusic.png
+
+      - name: 📸 抖音国际
+        <<: *anchor_policy_groups_streammedia
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/TikTok.png
+
+      - name: 👾 推趣直播
+        <<: *anchor_policy_groups_streammedia
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Twitch.png
+
+      - name: 🧸 哔哩哔哩
+        <<: *anchor_policy_groups_streammedia
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Bilibili.png
+
+      - name: 🎀 油管视频
+        <<: *anchor_policy_groups_streammedia
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/YouTube.png
+
+      - name: 📺 苹果电视
+        <<: *anchor_policy_groups_streammedia
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/AppleTV.png
+
+      - name: 🎥 奈飞视频
+        <<: *anchor_policy_groups_streammedia
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Netflix.png
+
+      - name: 🏰 迪士尼加
+        <<: *anchor_policy_groups_streammedia
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Disney+.png
+
+      - name: 🧿 麦克斯斯
+        <<: *anchor_policy_groups_streammedia
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/HBO.png
+
+      - name: 🥽 亚马逊逊
+        <<: *anchor_policy_groups_streammedia
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/PrimeVideo.png
+
+      # 细分默认策略组
+      - name: 📂 下载服务
+        <<: *anchor_policy_groups_default
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/iCloud.png
+
+      - name: 🎓 开源托管
+        <<: *anchor_policy_groups_default
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/GitHub.png
+
+      - name: 🥟 云端防护
+        <<: *anchor_policy_groups_default
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Cloudflare.png
+
+      - name: 🍎 苹果服务
+        <<: *anchor_policy_groups_default
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Apple.png
+
+      - name: 🍀 微软服务
+        <<: *anchor_policy_groups_default
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Microsoft.png
+
+      - name: ❄ 谷歌服务
+        <<: *anchor_policy_groups_default
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Google.png
+
+      - name: 🎮 游戏服务
+        <<: *anchor_policy_groups_default
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Game.png
+
+      # 流量兜底策略组
+      - name: 🐟 漏网之鱼
+        <<: *anchor_policy_groups_default
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Final.png
+
+      # 直连与拦截策略组
+      - name: 🎯 全球直连
+        type: select
+        proxies: [DIRECT, REJECT, ❤ 省流节点, ❤ 省流自动, 🇭🇰 香港手动, 🇨🇳 台湾手动, 🇸🇬 狮城手动, 🇯🇵 日本手动, 🇺🇸 美国手动, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🏠 家宽自选, 🥵 常用自选, 🥶 冷门自选, 🍟 节点集合]
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Direct.png
+        # hidden: true
+
+      - name: 🚫 全球拦截
+        type: select
+        proxies: [REJECT, DIRECT, ❤ 省流节点, ❤ 省流自动, 🇭🇰 香港手动, 🇨🇳 台湾手动, 🇸🇬 狮城手动, 🇯🇵 日本手动, 🇺🇸 美国手动, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇸🇬 狮城自动, 🇯🇵 日本自动, 🇺🇸 美国自动, 🏠 家宽自选, 🥵 常用自选, 🥶 冷门自选, 🍟 节点集合]
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Reject.png
+        # hidden: true
+
+    # 节点组
+      # 自定义节点组
+      - name: 💽 观影节点
+        <<: *anchor_node_groups_selector
+        filter: (?i)(?=.*(emby))          # 不区分大小写匹配关键字
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/CD.png
+
+      - name: 💽 观影自动
+        <<: *anchor_node_groups_urltest
+        filter: (?i)(?=.*(emby))
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/CD.png
+
+      - name: ❤ 省流节点
+        <<: *anchor_node_groups_selector
+        filter: (?i)^(?!.*(emby)).*(0\.)  # 不区分大小写过滤前者并匹配后者
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Heart.png
+
+      - name: ❤ 省流自动
+        <<: *anchor_node_groups_urltest
+        filter: (?i)^(?!.*(emby)).*(0\.)
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Heart.png
+
+      # 国家或地区手动切换节点组
+      - name: 🇭🇰 香港手动
+        <<: *anchor_node_groups_selector
+        filter: (?i)(?=.*(🇭🇰|香港|\b(hk|h\.k\.)\b|hong\ kong|hongkong))
+        icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
+
+      - name: 🇨🇳 台湾手动
+        <<: *anchor_node_groups_selector
+        filter: (?i)(?=.*(🇨🇳|🇹🇼|台湾|\b(tw)\b|taiwan))
+        icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/China.png
+
+      - name: 🇸🇬 狮城手动
+        <<: *anchor_node_groups_selector
+        filter: (?i)(?=.*(🇸🇬|狮城|新加坡|\b(sg)\b|singapore))
+        icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+
+      - name: 🇯🇵 日本手动
+        <<: *anchor_node_groups_selector
+        filter: (?i)(?=.*(🇯🇵|日本|\b(jp)\b|japan))
+        icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
+
+      - name: 🇺🇸 美国手动
+        <<: *anchor_node_groups_selector
+        filter: (?i)(?=.*(🇺🇸|美国|\b(us|u\.s\.)\b|united\ states|unitedstates))
+        icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+
+      # - name: 🇲🇴 澳门手动
+        # <<: *anchor_node_groups_selector
+        # filter: (?i)(?=.*(🇲🇴|澳门|\b(mo)\b|macao))
+        # icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Macao.png
+
+      # - name: 🇷🇺 俄国手动
+        # <<: *anchor_node_groups_selector
+        # filter: (?i)(?=.*(🇷🇺|俄罗斯|\b(ru)\b|russia))
+        # icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Russia.png
+
+      # 国家或地区流媒体手动切换节点组
+      - name: 🇭🇰 港流媒体
+        <<: *anchor_node_groups_selector
+        filter: (?i)(?=.*(🇭🇰|香港|\b(hk|h\.k\.)\b|hong\ kong|hongkong))
+        icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
+
+      - name: 🇨🇳 台流媒体
+        <<: *anchor_node_groups_selector
+        filter: (?i)(?=.*(🇨🇳|🇹🇼|台湾|\b(tw)\b|taiwan))
+        icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/China.png
+
+      - name: 🇸🇬 狮流媒体
+        <<: *anchor_node_groups_selector
+        filter: (?i)(?=.*(🇸🇬|狮城|新加坡|\b(sg)\b|singapore))
+        icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+
+      - name: 🇯🇵 日流媒体
+        <<: *anchor_node_groups_selector
+        filter: (?i)(?=.*(🇯🇵|日本|\b(jp)\b|japan))
+        icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
+
+      - name: 🇺🇸 美流媒体
+        <<: *anchor_node_groups_selector
+        filter: (?i)(?=.*(🇺🇸|美国|\b(us|u\.s\.)\b|united\ states|unitedstates))
+        icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+
+      # 国家或地区自动选择节点组
+      - name: 🇭🇰 香港自动
+        <<: *anchor_node_groups_urltest
+        filter: (?i)^(?!.*(emby|\b(fam)\b|家宽)).*(🇭🇰|香港|\b(hk|h\.k\.)\b|hong\ kong|hongkong)
+        icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
+
+      - name: 🇨🇳 台湾自动
+        <<: *anchor_node_groups_urltest
+        filter: (?i)^(?!.*(emby|\b(fam)\b|家宽)).*(🇨🇳|🇹🇼|台湾|\b(tw)\b|taiwan)
+        icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/China.png
+
+      - name: 🇸🇬 狮城自动
+        <<: *anchor_node_groups_urltest
+        filter: (?i)^(?!.*(emby|\b(fam)\b|家宽)).*(🇸🇬|狮城|新加坡|\b(sg)\b|singapore)
+        icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+
+      - name: 🇯🇵 日本自动
+        <<: *anchor_node_groups_urltest
+        filter: (?i)^(?!.*(emby|\b(fam)\b|家宽)).*(🇯🇵|日本|\b(jp)\b|japan)
+        icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
+
+      - name: 🇺🇸 美国自动
+        <<: *anchor_node_groups_urltest
+        filter: (?i)^(?!.*(emby|\b(fam)\b|家宽|starlink)).*(🇺🇸|美国|\b(us|u\.s\.)\b|united\ states|unitedstates)
+        icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+
+      # 家宽自选节点组
+      - name: 🏠 家宽自选
+        <<: *anchor_node_groups_selector
+        filter: (?i)(?=.*(\b(fam)\b|家宽))
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Fam.png
+
+      # 常用自选节点组
+      - name: 🥵 常用自选
+        <<: *anchor_node_groups_selector
+        filter: (?i)(?=.*(🇭🇰|香港|\b(hk|h\.k\.)\b|hong\ kong|hongkong|🇨🇳|🇹🇼|台湾|\b(tw)\b|taiwan|🇸🇬|狮城|新加坡|\b(sg)\b|singapore|🇯🇵|日本|\b(jp)\b|japan|🇺🇸|美国|\b(us|u\.s\.)\b|united\ states|unitedstates))
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Hot.png
+
+      # 冷门自选节点组
+      - name: 🥶 冷门自选
+        <<: *anchor_node_groups_selector
+        filter: (?i)^(?!.*(🇭🇰|香港|\b(hk|h\.k\.)\b|hong\ kong|hongkong|🇨🇳|🇹🇼|台湾|\b(tw)\b|taiwan|🇸🇬|狮城|新加坡|\b(sg)\b|singapore|🇯🇵|日本|\b(jp)\b|japan|🇺🇸|美国|\b(us|u\.s\.)\b|united\ states|unitedstates))
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Cold.png
+
+      # 节点集合节点组
+      - name: 🍟 节点集合
+        <<: *anchor_node_groups_selector
+        icon: https://raw.githubusercontent.com/sunfing/iNg/main/Icons/GeneralIcons/Available.png
+
+# 规则
+  # “geolocation-!cn”规则较多，相关 规则及提供者 已被注释
+  # “A_”开头的规则个性化较强，请按照自身需求更改/删除，如果使用这些规则时发现不满足个人需求可加入频道关联群组提出需求
+  rules:
+    - IP-CIDR, 198.18.0.1/16, REJECT, no-resolve  # 防止 fake-ip 模式下网络回环
+    - RULE-SET, Lan, 🎯 全球直连
+    - RULE-SET, UnBan, 🎯 全球直连
+    - RULE-SET, BanAD, 🚫 全球拦截
+    - RULE-SET, BanProgramAD, 🚫 全球拦截
+    - RULE-SET, Emby, 📀 媒体影院               # Emby/Jellyfin
+    - RULE-SET, Speedtest, ⚡ 速度测试
+    - RULE-SET, GoogleFCM, 📢 谷歌推送
+    - RULE-SET, WeChat, 🎯 全球直连
+    - RULE-SET, Telegram, 📲 电报消息
+    - RULE-SET, Discord, 🎙 语音社群
+    - RULE-SET, AppleNews, 🍎 苹果新闻
+    - RULE-SET, Twitter, 📮 推特推特
+    - RULE-SET, Instagram, 🌈 晒照片墙
+    - RULE-SET, OpenAI, ✨ ChatGPT
+    - RULE-SET, Claude, ✨ Claude
+    - RULE-SET, Gemini, ✨ Gemini
+    - RULE-SET, Copilot, ✨ Copilot
+    - RULE-SET, A_AIGC, 🎨 语言模型               # 自定义 AIGC
+    - RULE-SET, AppleMusic, 🎯 全球直连
+    - RULE-SET, Spotify, 🎶 声田音乐
+    - RULE-SET, YouTubeMusic, 🎶 油管音乐
+    - RULE-SET, TikTok, 📸 抖音国际
+    - RULE-SET, Twitch, 👾 推趣直播
+    - RULE-SET, BiliBiliIntl, 🧸 哔哩哔哩
+    - RULE-SET, Bilibili, 🧸 哔哩哔哩
+    - RULE-SET, YouTube, 🎀 油管视频
+    - RULE-SET, AppleTV, 📺 苹果电视
+    - RULE-SET, Netflix, 🎥 奈飞视频
+    - RULE-SET, Disney, 🏰 迪士尼加
+    - RULE-SET, HBO, 🧿 麦克斯斯
+    - RULE-SET, PrimeVideo, 🥽 亚马逊逊
+    - RULE-SET, GlobalMedia, 🎬 流媒体集
+    - RULE-SET, ChinaMedia, 🎯 全球直连
+    - RULE-SET, Tencent, 🎯 全球直连
+    - RULE-SET, TeamViewer, 🎯 全球直连
+    - RULE-SET, GitHub, 🎓 开源托管
+    - RULE-SET, Cloudflarecn, 🎯 全球直连
+    - RULE-SET, Cloudflare, 🥟 云端防护
+    - RULE-SET, Apple, 🍎 苹果服务
+    - RULE-SET, OneDrive, 📂 下载服务
+    - RULE-SET, Microsoft, 🍀 微软服务
+    - RULE-SET, GoogleDrive, 📂 下载服务
+    - RULE-SET, Google, ❄ 谷歌服务
+    - RULE-SET, SteamCN, 🎯 全球直连
+    - RULE-SET, GameDownloadCN, 🎯 全球直连
+    - RULE-SET, GameDownload, 📂 下载服务
+    - RULE-SET, Steam, 🎮 游戏服务
+    - RULE-SET, Epic, 🎮 游戏服务
+    - RULE-SET, Origin, 🎮 游戏服务
+    - RULE-SET, Sony, 🎮 游戏服务
+    - RULE-SET, Nintendo, 🎮 游戏服务
+    - RULE-SET, Xbox, 🎮 游戏服务
+    - RULE-SET, Game, 🎮 游戏服务
+    - RULE-SET, Download, 🎯 全球直连
+    - RULE-SET, PrivateTracker, 🎯 全球直连
+    - RULE-SET, Proxy, 🚀 默认代理
+    - RULE-SET, Global, 🚀 默认代理
+    - RULE-SET, China, 🎯 全球直连
+    - RULE-SET, ChinaIPs, 🎯 全球直连
+    - GEOIP, CN, 🎯 全球直连
+    # - RULE-SET, geolocation-!cn, 🐟 漏网之鱼
+    - MATCH, 🐟 漏网之鱼
+
+# 远程规则集锚点
+  # anchor_rule_providers_classical_mrs: &anchor_rule_providers_classical_mrs {type: http, behavior: classical, interval: 86400, format: mrs}     # 经典规则集配置_mrs
+  # anchor_rule_providers_classical_text: &anchor_rule_providers_classical_text {type: http, behavior: classical, interval: 86400, format: text}  # 经典规则集配置_text，即“.list”
+  anchor_rule_providers_classical_yaml: &anchor_rule_providers_classical_yaml {type: http, behavior: classical, interval: 86400, format: yaml}  # 经典规则集配置_yaml
+
+  # anchor_rule_providers_domain_mrs: &anchor_rule_providers_domain_mrs {type: http, behavior: domain, interval: 86400, format: mrs}              # 域名规则集配置_mrs
+  # anchor_rule_providers_domain_text: &anchor_rule_providers_domain_text {type: http, behavior: domain, interval: 86400, format: text}           # 域名规则集配置_text，即“.list”
+  # anchor_rule_providers_domain_yaml: &anchor_rule_providers_domain_yaml {type: http, behavior: domain, interval: 86400, format: yaml}           # 域名规则集配置_yaml
+
+  # anchor_rule_providers_ipcidr_mrs: &anchor_rule_providers_ipcidr_mrs {type: http, behavior: ipcidr, interval: 86400, format: mrs}              # IP-CIDR 规则集配置_mrs
+  # anchor_rule_providers_ipcidr_text: &anchor_rule_providers_ipcidr_text {type: http, behavior: ipcidr, interval: 86400, format: text}           # IP-CIDR 规则集配置_text，即“.list”
+  # anchor_rule_providers_ipcidr_yaml: &anchor_rule_providers_ipcidr_yaml {type: http, behavior: ipcidr, interval: 86400, format: yaml}           # IP-CIDR 规则集配置_yaml
+
+# 远程规则集
+  rule-providers: # 🎯 全球直连
+    Lan:
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Lan/Lan_No_Resolve.yaml
+      path: ./rule_providers/Lan.yaml
+    UnBan: # 🎯 全球直连
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Providers/UnBan.yaml
+      path: ./rule_providers/UnBan.yaml
+    BanAD: # 🚫 全球拦截
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Providers/BanAD.yaml
+      path: ./rule_providers/BanAD.yaml
+    BanProgramAD: # 🚫 全球拦截
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Providers/BanProgramAD.yaml
+      path: ./rule_providers/BanProgramAD.yaml
+    Emby: # 📀 媒体影院
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Emby/Emby_No_Resolve.yaml
+      path: ./rule_providers/Emby.yaml
+    Speedtest: # ⚡ 速度测试
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Speedtest/Speedtest_No_Resolve.yaml
+      path: ./rule_providers/Speedtest.yaml
+    GoogleFCM: # 📢 谷歌推送
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GoogleFCM/GoogleFCM_No_Resolve.yaml
+      path: ./rule_providers/GoogleFCM.yaml
+    WeChat: # 🎯 全球直连
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/WeChat/WeChat_No_Resolve.yaml
+      path: ./rule_providers/WeChat.yaml
+    Telegram: # 📲 电报消息
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram_No_Resolve.yaml
+      path: ./rule_providers/Telegram.yaml
+    Discord: # 🎙 语音社群
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Discord/Discord_No_Resolve.yaml
+      path: ./rule_providers/Discord.yaml
+    AppleNews: # 🍎 苹果新闻
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AppleNews/AppleNews_No_Resolve.yaml
+      path: ./rule_providers/AppleNews.yaml
+    Twitter: # 📮 推特推特
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter_No_Resolve.yaml
+      path: ./rule_providers/Twitter.yaml
+    Instagram: # 🌈 晒照片墙
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Instagram/Instagram_No_Resolve.yaml
+      path: ./rule_providers/Instagram.yaml
+    OpenAI: # ✨ ChatGPT
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI_No_Resolve.yaml
+      path: ./rule_providers/OpenAI.yaml
+    Claude: # ✨ Claude
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Claude/Claude_No_Resolve.yaml
+      path: ./rule_providers/Claude.yaml
+    Gemini: # ✨ Gemini
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Gemini/Gemini_No_Resolve.yaml
+      path: ./rule_providers/Gemini.yaml
+    Copilot: # ✨ Copilot
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Copilot/Copilot_No_Resolve.yaml
+      path: ./rule_providers/Copilot.yaml
+    A_AIGC: # 🎨 语言模型
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/sunfing/iNg/main/Rules/AIGC/A_AIGC.yaml
+      path: ./rule_providers/A_AIGC.yaml
+    AppleMusic: # 🎯 全球直连
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AppleMusic/AppleMusic_No_Resolve.yaml
+      path: ./rule_providers/AppleMusic.yaml
+    Spotify: # 🎶 声田音乐
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Spotify/Spotify_No_Resolve.yaml
+      path: ./rule_providers/Spotify.yaml
+    YouTubeMusic: # 🎶 油管音乐
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTubeMusic/YouTubeMusic_No_Resolve.yaml
+      path: ./rule_providers/YouTubeMusic.yaml
+    TikTok: # 📸 抖音国际
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok_No_Resolve.yaml
+      path: ./rule_providers/TikTok.yaml
+    Twitch: # 👾 推趣直播
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitch/Twitch_No_Resolve.yaml
+      path: ./rule_providers/Twitch.yaml
+    BiliBiliIntl: # 🧸 哔哩哔哩
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/BiliBiliIntl/BiliBiliIntl_No_Resolve.yaml
+      path: ./rule_providers/BiliBiliIntl.yaml
+    Bilibili: # 🧸 哔哩哔哩
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/BiliBili/BiliBili_No_Resolve.yaml
+      path: ./rule_providers/Bilibili.yaml
+    YouTube: # 🎀 油管视频
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube_No_Resolve.yaml
+      path: ./rule_providers/YouTube.yaml
+    AppleTV: # 📺 苹果电视
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AppleTV/AppleTV_No_Resolve.yaml
+      path: ./rule_providers/AppleTV.yaml
+    Netflix: # 🎥 奈飞视频
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix_Classical_No_Resolve.yaml
+      path: ./rule_providers/Netflix.yaml
+    Disney: # 🏰 迪士尼加
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Disney/Disney_No_Resolve.yaml
+      path: ./rule_providers/Disney.yaml
+    HBO: # 🧿 麦克斯斯
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/HBO/HBO_No_Resolve.yaml
+      path: ./rule_providers/HBO.yaml
+    PrimeVideo: # 🥽 亚马逊逊
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PrimeVideo/PrimeVideo_No_Resolve.yaml
+      path: ./rule_providers/PrimeVideo.yaml
+    GlobalMedia: # 🎬 流媒体集
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GlobalMedia/GlobalMedia_Classical_No_Resolve.yaml
+      path: ./rule_providers/GlobalMedia.yaml
+    ChinaMedia: # 🎯 全球直连
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMedia/ChinaMedia_No_Resolve.yaml
+      path: ./rule_providers/ChinaMedia.yaml
+    Tencent: # 🎯 全球直连
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Tencent/Tencent_No_Resolve.yaml
+      path: ./rule_providers/Tencent.yaml
+    TeamViewer: # 🎯 全球直连
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/TeamViewer/TeamViewer_No_Resolve.yaml
+      path: ./rule_providers/TeamViewer.yaml
+    GitHub: # 🎓 开源托管
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub_No_Resolve.yaml
+      path: ./rule_providers/GitHub.yaml
+    Cloudflarecn: # 🎯 全球直连
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Cloudflarecn/Cloudflarecn_No_Resolve.yaml
+      path: ./rule_providers/Cloudflarecn.yaml
+    Cloudflare: # 🥟 云端防护
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Cloudflare/Cloudflare_No_Resolve.yaml
+      path: ./rule_providers/Cloudflare.yaml
+    Apple: # 🍎 苹果服务
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple_Classical_No_Resolve.yaml
+      path: ./rule_providers/Apple.yaml
+    OneDrive: # 📂 下载服务
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OneDrive/OneDrive_No_Resolve.yaml
+      path: ./rule_providers/OneDrive.yaml
+    Microsoft: # 🍀 微软服务
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft_No_Resolve.yaml
+      path: ./rule_providers/Microsoft.yaml
+    GoogleDrive: # 📂 下载服务
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GoogleDrive/GoogleDrive_No_Resolve.yaml
+      path: ./rule_providers/GoogleDrive.yaml
+    Google: # ❄ 谷歌服务
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google_No_Resolve.yaml
+      path: ./rule_providers/Google.yaml
+    SteamCN: # 🎯 全球直连
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/SteamCN/SteamCN_No_Resolve.yaml
+      path: ./rule_providers/SteamCN.yaml
+    GameDownloadCN: # 🎯 全球直连
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Game/GameDownloadCN/GameDownloadCN_No_Resolve.yaml
+      path: ./rule_providers/GameDownloadCN.yaml
+    GameDownload: # 📂 下载服务
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Game/GameDownload/GameDownload_No_Resolve.yaml
+      path: ./rule_providers/GameDownload.yaml
+    Steam: # 🎮 游戏服务
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Steam/Steam_No_Resolve.yaml
+      path: ./rule_providers/Steam.yaml
+    Epic: # 🎮 游戏服务
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Epic/Epic_No_Resolve.yaml
+      path: ./rule_providers/Epic.yaml
+    Origin: # 🎮 游戏服务
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Origin/Origin_No_Resolve.yaml
+      path: ./rule_providers/Origin.yaml
+    Sony: # 🎮 游戏服务
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Sony/Sony_No_Resolve.yaml
+      path: ./rule_providers/Sony.yaml
+    Nintendo: # 🎮 游戏服务
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Nintendo/Nintendo_No_Resolve.yaml
+      path: ./rule_providers/Nintendo.yaml
+    Xbox: # 🎮 游戏服务
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Xbox/Xbox_No_Resolve.yaml
+      path: ./rule_providers/Xbox.yaml
+    Game: # 🎮 游戏服务
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Game/Game.yaml
+      path: ./rule_providers/Game.yaml
+    Download: # 🎯 全球直连
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Download/Download_No_Resolve.yaml
+      path: ./rule_providers/Download.yaml
+    PrivateTracker: # 🎯 全球直连
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PrivateTracker/PrivateTracker_No_Resolve.yaml
+      path: ./rule_providers/PrivateTracker.yaml
+    Proxy: # 🚀 默认代理
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Proxy/Proxy_Classical_No_Resolve.yaml
+      path: ./rule_providers/Proxy.yaml
+    Global: # 🚀 默认代理
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Global/Global_Classical_No_Resolve.yaml
+      path: ./rule_providers/Global.yaml
+    China: # 🎯 全球直连
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/China/China_Classical_No_Resolve.yaml
+      path: ./rule_providers/China.yaml
+    ChinaIPs: # 🎯 全球直连
+      <<: *anchor_rule_providers_classical_yaml
+      url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaIPs/ChinaIPs_Classical_No_Resolve.yaml
+      path: ./rule_providers/ChinaIPs.yaml
+    # geolocation-!cn: # 🐟 漏网之鱼
+      # <<: *anchor_rule_providers_domain_yaml
+      # url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.yaml
+      # path: ./rule_providers/geolocation-!cn.yaml

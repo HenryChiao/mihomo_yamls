@@ -157,24 +157,4 @@
 </details>
 
 > ⚠️ **免责声明**: 本仓库仅作为配置文件的自动化搬运与归档工具，所有配置文件的版权归原作者所有。
-* [yiteei](https://github.com/yiteei)
-* [liandu2024](https://github.com/liandu2024)
-* [Lanlan13-14](https://github.com/Lanlan13-14/Rules)
-* [yyhhyyyyyy](https://github.com/yyhhyyyyyy)
-* [echs-top](https://github.com/echs-top)
-* [qichiyuhub](https://github.com/qichiyuhub)
-* [iKelee](https://github.com/luestr)
-* [Fufu](https://github.com/sunfing)
 
-### 📱 模块来源 (Mobile Modules)
-* [Surfing](https://github.com/GitMetaio/Surfing)
-* [AkashaProxy](https://github.com/akashaProxy/akashaProxy)
-* [ClashMix](https://github.com/AXEVO/Clash-MIX)
-* [BoxProxy](https://github.com/boxproxy/box)
-
-### 📚 参考文档
-* [Metacubex Wiki](https://wiki.metacubex.one/)
-
-</details>
-
-> ⚠️ **免责声明**: 本仓库仅作为配置文件的自动化搬运与归档工具，所有配置文件的版权归原作者所有。

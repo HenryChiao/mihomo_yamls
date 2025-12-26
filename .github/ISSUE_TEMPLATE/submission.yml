@@ -1,0 +1,58 @@
+name: 🚀 Submit New Config / 提交新配置源
+description: Suggest a high-quality Mihomo config source to be added. / 推荐优质的 Mihomo 配置源加入自动抓取列表。
+title: "[Submission]: "
+labels: ["enhancement", "good first issue"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your contribution! Please ensure the source is **open source** and **regularly updated**.
+        感谢贡献！请确保推荐的源是**开源**且**长期维护**的。
+
+  - type: input
+    id: author
+    attributes:
+      label: Author Name / 作者名称
+      placeholder: e.g., CoolDev123
+    validations:
+      required: true
+
+  - type: input
+    id: source_url
+    attributes:
+      label: Source URL (Raw or Repo) / 原始链接
+      description: Provide the GitHub Repo link or the Raw .yaml link.
+      placeholder: https://github.com/User/Repo/blob/main/config.yaml
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Suggested Category / 建议分类
+      options:
+        - Official Examples (官方示例)
+        - General Config (通用/懒人配置)
+        - Smart Mode (路由/透明网关专用)
+        - Mobile Modules (手机模块专用)
+        - Other / Unsure
+    validations:
+      required: true
+
+  - type: textarea
+    id: reason
+    attributes:
+      label: Why this config? / 推荐理由
+      description: What makes this config special? (e.g., Great rules, minimal, detailed DNS). / 这个配置有什么特点？（如：分流规则全、DNS优化好、去广告强等）
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: agreement
+    attributes:
+      label: Confirmation / 确认
+      options:
+        - label: The config relies on Mihomo (Clash Meta) core features. / 该配置基于 Mihomo 核心特性。
+          required: true
+        - label: The source allows redistribution (MIT/GPL or Open Source). / 原作者允许分发（开源）。
+          required: true

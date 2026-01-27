@@ -7,36 +7,37 @@
 ## 📄 配置文件详解 (Details)
 
 ### 📝 mihomo_smart.yaml
-- **大小**: 17.8 KB
+- **大小**: 21.1 KB
 - **链接**: [查看源码](https://github.com/HenryChiao/mihomo_yamls/blob/main/Smart_Mode/echs-top/mihomo_smart.yaml)
 
 #### 📶 网络端口配置 (Ports)
 | 类型 | 端口/地址 | 说明 |
 | :--- | :--- | :--- |
-| Mixed (混合) | 7890 | HTTP/SOCKS |
+| SOCKS5 | 9870 | 仅 SOCKS |
+| Controller | 0.0.0.0:9090 | 控制面板 |
 
 
 <details>
-<summary><b>🔎 点击查看策略组架构 (27个)</b></summary>
+<summary><b>🔎 点击查看策略组架构 (35个)</b></summary>
 
 | 策略组 (Group) | 类型 (Type) |
 | :--- | :--- |
 | 👆 PROXY | `select` |
 | 👆 PROXYDNS | `select` |
+| 👆 AD | `select` |
 | 👆 WebRTC | `select` |
+| 👆 SPEEDTEST | `select` |
 | 👆 FCM | `select` |
 | 👆 BOTTEST | `select` |
-| 👆 BILIBILI | `select` |
+| 👆 AI | `select` |
 | 👆 TELEGRAM | `select` |
 | 👆 META | `select` |
 | 👆 TWITTER | `select` |
 | 👆 TIKTOK | `select` |
 | 👆 NETFLIX | `select` |
 | 👆 SPOTIFY | `select` |
-| 👆 AI | `select` |
-| 👆 ONEDRIVE-DL | `select` |
-| 👆 STEAM-CN | `select` |
-| ... | 还有 12 个 |
+| 👆 BILIBILI | `select` |
+| ... | 还有 20 个 |
 
 </details>
 
@@ -57,4 +58,4 @@
 
 | 文件名 | 大小 | 链接 |
 | :--- | :--- | :--- |
-| `mihomo_smart.yaml` | 17.8 KB | [查看](https://github.com/HenryChiao/mihomo_yamls/blob/main/Smart_Mode/echs-top/mihomo_smart.yaml) |
+| `mihomo_smart.yaml` | 21.1 KB | [查看](https://github.com/HenryChiao/mihomo_yamls/blob/main/Smart_Mode/echs-top/mihomo_smart.yaml) |

@@ -1,0 +1,8 @@
+DOMAIN-KEYWORD,ipv6-test
+DOMAIN-KEYWORD,ipv6test
+DOMAIN-KEYWORD,ookla
+DOMAIN-KEYWORD,speedtest
+DOMAIN-KEYWORD,test-ipv6
+DOMAIN-KEYWORD,testipv6
+PROCESS-NAME,Speedtest.exe
+PROCESS-NAME,org.zwanoo.android.speedtest

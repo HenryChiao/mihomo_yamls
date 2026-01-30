@@ -30,24 +30,26 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml
 
-      - name: Generate Sub-READMEs
+      # ==========================================
+      # 1. 为 THEYAMLS 子目录生成详细技术分析文档
+      # ==========================================
+      - name: Generate Sub-READMEs for THEYAMLS
         run: |
           python3 << 'PYTHON_SCRIPT'
           import os
           import urllib.parse
           import yaml
+          import re
           
           yaml.add_multi_constructor("!", lambda loader, suffix, node: None, Loader=yaml.SafeLoader)
 
           REPO_URL = "https://github.com/${{ github.repository }}/blob/main"
-          # 修改：YAML 源目录映射到 THEYAMLS
           DIR_MAP = {
               "THEYAMLS/Official_Examples": "Mihomo 官方示例 (Official)",
               "THEYAMLS/General_Config": "通用进阶配置 (General Config)",
               "THEYAMLS/Smart_Mode": "Smart 模式 / 路由专用 (Smart Mode)",
               "THEYAMLS/Mobile_Modules": "Android 手机模块 (Mobile Modules)"
           }
-          # 忽略 Overwrite 目录，避免扫描 THEINI/THEOPENCLASH 中的非 YAML 文件
           IGNORE_DIRS = [".git", ".github", "Overwrite"]
           IGNORE_FILES = ["README.md", "LICENSE", "release_body.md"]
 
@@ -153,44 +155,9 @@ jobs:
               except Exception as e:
                   return None
 
-          def generate_comparison_table(configs_data):
-              headers = ["特性 / 文件"] 
-              for filename in configs_data.keys():
-                  headers.append(f"`{filename}`")
-              
-              lines = []
-              lines.append("| " + " | ".join(headers) + " |")
-              lines.append("| :--- " + "| :--- " * len(configs_data) + "|")
-              
-              size_row = ["**文件大小**"]
-              for filename, data in configs_data.items():
-                  size_row.append(data.get("file_size", "N/A"))
-              lines.append("| " + " | ".join(size_row) + " |")
-
-              rows = [
-                  ("port_mixed", "混合端口"),
-                  ("port_ctrl", "控制面板"),
-                  ("mode", "运行模式"),
-                  ("tun", "TUN 模式"),
-                  ("group_count", "策略组数"),
-                  ("rule_count", "规则条数"),
-              ]
-
-              for key, label in rows:
-                  row_content = [f"**{label}**"]
-                  for filename, data in configs_data.items():
-                      val = data.get("parsed", {}).get(key, "N/A")
-                      if key in ["group_count", "rule_count"]:
-                          val = f"**{val}**"
-                      row_content.append(str(val))
-                  lines.append("| " + " | ".join(row_content) + " |")
-              
-              return "\n".join(lines)
-
           def generate_readme(root_path, files):
               rel_path = os.path.relpath(root_path, ".")
-              # 提取 THEYAMLS/Category 后面的部分作为标题映射
-              folder_name = rel_path  # 例如 THEYAMLS/Official_Examples
+              folder_name = rel_path
               title = DIR_MAP.get(folder_name, os.path.basename(root_path))
 
               configs_data = {} 
@@ -206,86 +173,228 @@ jobs:
                               "parsed": parsed_info
                           }
 
+              if not configs_data:
+                  return None
+
               content = []
               content.append(f"# 📂 {title}\n")
               
               depth = rel_path.count(os.sep) + 1
               back_link = "../" * depth + "README.md"
               content.append(f"[🔙 返回主页 (Return to Home)]({back_link})\n")
-              content.append("> 🤖 **自动分析报告** | Auto-generated Report\n")
+              content.append("> 🤖 **自动技术分析报告** | Auto-generated Technical Report\n")
 
               if len(configs_data) > 1:
                   content.append("## ⚔️ 配置横向对比 (Comparison)\n")
-                  content.append(generate_comparison_table(configs_data))
+                  # 生成对比表格逻辑...
+                  headers = ["特性 / 文件"] + [f"`{f}`" for f in configs_data.keys()]
+                  content.append("| " + " | ".join(headers) + " |")
+                  content.append("| :--- " + "| :--- " * len(configs_data) + "|")
+                  
+                  size_row = ["**文件大小**"] + [d.get("file_size", "N/A") for d in configs_data.values()]
+                  content.append("| " + " | ".join(size_row) + " |")
                   content.append("\n")
               
-              if configs_data:
-                  content.append("## 📄 配置文件详解 (Details)\n")
-                  for filename, data in configs_data.items():
-                      info = data.get("parsed", {})
-                      file_url = f"{REPO_URL}/{urllib.parse.quote(rel_path)}/{urllib.parse.quote(filename)}"
-                      
-                      content.append(f"### 📝 {filename}")
-                      content.append(f"- **大小**: {data.get('file_size', 'N/A')}")
-                      content.append(f"- **链接**: [查看源码]({file_url})")
+              content.append("## 📄 配置文件详解 (Details)\n")
+              for filename, data in configs_data.items():
+                  info = data.get("parsed", {})
+                  file_url = f"{REPO_URL}/{urllib.parse.quote(rel_path)}/{urllib.parse.quote(filename)}"
+                  
+                  content.append(f"### 📝 {filename}")
+                  content.append(f"- **大小**: {data.get('file_size', 'N/A')}")
+                  content.append(f"- **直链**: [点击下载 Raw]({file_url})")
 
-                      port_lines = info.get("ports_display_lines", [])
-                      if port_lines:
-                          content.append(f"\n#### 📶 网络端口配置 (Ports)")
-                          content.append("| 类型 | 端口/地址 | 说明 |")
-                          content.append("| :--- | :--- | :--- |")
-                          for line in port_lines:
-                              content.append(line)
-                          content.append("\n")
+                  port_lines = info.get("ports_display_lines", [])
+                  if port_lines:
+                      content.append(f"\n**📶 端口配置：**")
+                      content.append("| 类型 | 端口 | 说明 |")
+                      content.append("| :--- | :--- | :--- |")
+                      for line in port_lines:
+                          content.append(line)
+                      content.append("")
 
-                      groups_raw = info.get("groups_raw", [])
-                      if groups_raw:
-                          group_count = info.get("group_count", 0)
-                          content.append(f"<details>")
-                          content.append(f"<summary><b>🔎 点击查看策略组架构 ({group_count}个)</b></summary>\n")
-                          content.append("| 策略组 (Group) | 类型 (Type) |")
-                          content.append("| :--- | :--- |")
-                          content.extend(groups_raw[:15])
-                          if len(groups_raw) > 15:
-                              content.append(f"| ... | 还有 {len(groups_raw)-15} 个 |")
-                          content.append(f"\n</details>\n")
-                      
-                      dns_raw = info.get("dns_raw", [])
-                      if dns_raw:
-                          content.append(f"<details>")
-                          content.append(f"<summary><b>🌐 点击查看 DNS 配置</b></summary>\n")
-                          content.append("| 类型 | 服务器 |")
-                          content.append("| :--- | :--- |")
-                          content.extend(dns_raw)
-                          content.append(f"\n</details>\n")
-                      
-                      content.append("\n---\n")
-
-              content.append("## 📦 所有文件列表 (File List)\n")
-              content.append("| 文件名 | 大小 | 链接 |")
-              content.append("| :--- | :--- | :--- |")
-              for f in sorted(files):
-                  if f in IGNORE_FILES or f.startswith("."): continue
-                  f_path = os.path.join(root_path, f)
-                  f_url = f"{REPO_URL}/{urllib.parse.quote(rel_path)}/{urllib.parse.quote(f)}"
-                  content.append(f"| `{f}` | {get_file_size(f_path)} | [查看]({f_url}) |")
+                  groups_raw = info.get("groups_raw", [])
+                  if groups_raw:
+                      content.append(f"<details><summary>🔎 策略组架构 ({len(groups_raw)}个)</summary>\n")
+                      content.append("| 策略组 | 类型 |")
+                      content.append("| :--- | :--- |")
+                      content.extend(groups_raw[:20])
+                      if len(groups_raw) > 20:
+                          content.append(f"| ... | 还有 {len(groups_raw)-20} 个 |")
+                      content.append("</details>\n")
+                  
+                  content.append("---\n")
 
               return "\n".join(content)
 
-          print("Starting README generation...")
-          # 扫描 THEYAMLS 下的直接子目录
+          # 遍历 THEYAMLS 下的直接子目录
           if os.path.exists("THEYAMLS"):
               for category in os.listdir("THEYAMLS"):
                   category_path = os.path.join("THEYAMLS", category)
                   if os.path.isdir(category_path):
                       files = os.listdir(category_path)
-                      if any(f.endswith((".yaml", ".yml")) for f in files):
-                          readme_txt = generate_readme(category_path, files)
+                      readme_txt = generate_readme(category_path, files)
+                      if readme_txt:
                           with open(os.path.join(category_path, "README.md"), "w", encoding="utf-8") as f:
                               f.write(readme_txt)
                           print(f"Generated: THEYAMLS/{category}/README.md")
           PYTHON_SCRIPT
 
+      # ==========================================
+      # 2. 生成根目录 README (基于脚本逆推)
+      # ==========================================
+      - name: Generate Root README
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import os
+          import re
+          from urllib.parse import urlparse
+
+          def parse_shell_script(script_path):
+              """解析 shell 脚本，提取 URL 和输出路径"""
+              if not os.path.exists(script_path):
+                  return []
+              
+              with open(script_path, 'r', encoding='utf-8', errors='ignore') as f:
+                  content = f.read()
+              
+              results = []
+              # 匹配模式: url|output 或 url 在数组中
+              # 优先匹配 TASKS 格式: https://...|Path/file.yaml
+              pattern = r'(https?://[^|\s]+)\|([^"\n]+?\.ya?ml)'
+              matches = re.findall(pattern, content)
+              
+              for url, output_path in matches:
+                  # 清洗路径
+                  output_path = output_path.strip()
+                  
+                  # 解析作者
+                  if 'raw.githubusercontent.com' in url:
+                      parts = url.split('/')
+                      author = parts[4] if len(parts) > 4 else 'unknown'
+                  elif 'github.com' in url:
+                      parts = url.split('/')
+                      author = parts[3] if len(parts) > 3 else 'unknown'
+                  elif 'gist' in url:
+                      author = 'gist'
+                  else:
+                      author = urlparse(url).netloc.split('.')[0]
+                  
+                  # 解析分类
+                  category = 'Other'
+                  if 'General_Config' in output_path:
+                      category = 'General'
+                  elif 'Smart_Mode' in output_path:
+                      category = 'Smart'
+                  elif 'Mobile_Modules' in output_path:
+                      category = 'Mobile'
+                  elif 'Official_Examples' in output_path:
+                      category = 'Official'
+                  
+                  filename = os.path.basename(url)
+                  repo_url = '/'.join(url.split('/')[:5]) if 'github' in url else url
+                  
+                  results.append({
+                      'author': author,
+                      'filename': filename,
+                      'output': output_path,
+                      'category': category,
+                      'source_repo': repo_url
+                  })
+              return results
+
+          # 从各个脚本收集数据
+          scripts_map = {
+              'General': '.github/scripts/download-general.sh',
+              'Smart': '.github/scripts/download-smart.sh', 
+              'Mobile': '.github/scripts/download-mobile.sh',
+              'Official': '.github/scripts/download-official.sh'
+          }
+          
+          all_data = {}
+          for cat, script in scripts_map.items():
+              all_data[cat] = parse_shell_script(script)
+
+          # 作者描述映射（可维护的字典）
+          author_desc = {
+              'HenryChiao': '全能型配置，整合多种策略；Pro系列策略组更加细化',
+              '666OS': '规则策略多而全，格式美观；OneTouch 为一键连精简版',
+              'JohnsonRan': '经典大众配置，含国家分组；包含去广告等实用功能',
+              'Lanlan13-14': '涵盖全量版、精简版(Lite)及去广告版(NoAd)',
+              'liandu2024': '侧重高可用性 (Fallback)，自动切换故障节点',
+              'Yiteei': '注释极其完整，结构清晰，适合进阶学习与魔改',
+              'echs-top': '社区热门 Smart 配置',
+              'qichiyuhub': '侧重 AI 与智能分流策略',
+              'GitMetaio': '新手友好、开箱即用，规则分组大众化且清晰',
+              'boxproxy': '经典 Box 的分支版本，加入 WiFi 启停逻辑',
+              'akashaProxy': '简单完备的配置结构，包含详细的国家/地区分组',
+              'AXEVO': '极简风格配置，模块化设计，轻量高效',
+              'Metacubex': 'Mihomo 官方示例，最纯净基础'
+          }
+
+          lines = []
+          lines.append("# 📦 mihomo_yamls")
+          lines.append("")
+          lines.append("> 🔄 自动同步的 Mihomo (Clash.Meta) 配置文件仓库")
+          lines.append("> ")
+          lines.append("> 本仓库通过 GitHub Actions 每日自动同步各上游作者的配置文件，并生成技术分析文档。")
+          lines.append("")
+
+          # 生成各分类表格
+          categories = [
+              ('General', '通用进阶配置 (General Config)', '适合 PC、Mac 及普通手机端使用的全功能配置，涵盖日常主力需求。'),
+              ('Smart', 'Smart 模式 / 路由专用配置 (Smart Mode)', '专为 Smart 核心、OpenClash 或软路由环境优化，侧重智能分流与 DNS 优化。⚠️ 需配合 Smart 魔改内核使用。'),
+              ('Mobile', 'Android 模块专用配置 (Mobile Modules)', '来源于各类 Android 透明代理模块自带的内置配置，适合已获取 Root 权限的用户。'),
+              ('Official', 'Mihomo 官方 Wiki 示例 (Official)', '最纯净、最基础，适合从零开始构建或学习配置语法的用户。')
+          ]
+
+          for cat_key, title, desc in categories:
+              items = all_data.get(cat_key, [])
+              if not items:
+                  continue
+              
+              lines.append(f"### {title}")
+              lines.append(f"> {desc}")
+              lines.append("")
+              lines.append("| 👤 作者 (Author) | 📦 配置清单 (Configs) | 📝 描述 (Description) | 🔗 溯源 (Source) |")
+              lines.append("| :--- | :--- | :--- | :--- |")
+              
+              # 按作者分组
+              by_author = {}
+              for item in items:
+                  auth = item['author']
+                  if auth not in by_author:
+                      by_author[auth] = []
+                  by_author[auth].append(item)
+              
+              for author, files in sorted(by_author.items()):
+                  # 生成文件链接
+                  file_links = "<br>".join([
+                      f"📄 [`{f['filename']}`](./{f['output']})" 
+                      for f in files
+                  ])
+                  
+                  # 获取描述
+                  description = author_desc.get(author, '社区精选配置')
+                  
+                  # 溯源链接（取第一个文件的源仓库）
+                  source_link = f"[{author}/{os.path.basename(files[0]['source_repo'])}]({files[0]['source_repo']})"
+                  
+                  lines.append(f"| **{author}** | {file_links} | {description} | {source_link} |")
+              
+              lines.append("")
+              lines.append("[🔙 返回主页 (Return to Home)](../README.md)")
+              lines.append("")
+
+          # 写入根目录
+          with open("README.md", "w", encoding="utf-8") as f:
+              f.write("\n".join(lines))
+          print("✅ Generated root README.md")
+          PYTHON_SCRIPT
+
+      # ==========================================
+      # 3. 生成 OpenClash 配置 (输出到 Overwrite/THEOPENCLASH)
+      # ==========================================
       - name: Generate OpenClash Configs
         run: |
           python3 << 'PYTHON_SCRIPT'
@@ -293,7 +402,6 @@ jobs:
           import yaml
           from urllib.parse import quote
 
-          # 修改：源目录改为 THEYAMLS 下的分类
           SOURCE_BASE = "THEYAMLS"
           SOURCE_DIRS = [
               "THEYAMLS/Official_Examples",
@@ -301,7 +409,6 @@ jobs:
               "THEYAMLS/Smart_Mode",
               "THEYAMLS/Mobile_Modules"
           ]
-          # 修改：输出到 Overwrite/THEOPENCLASH
           OUTPUT_BASE = "Overwrite/THEOPENCLASH"
           GITHUB_REPO = "${{ github.repository }}"
           REPO_RAW_BASE = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main"
@@ -313,10 +420,8 @@ jobs:
               try:
                   with open(file_path, "r", encoding="utf-8") as f:
                       content = f.read()
-                  
                   if "\t" in content:
                       content = content.replace("\t", "  ")
-                  
                   data = yaml.safe_load(content)
                   if not isinstance(data, dict):
                       return {"providers": [], "has_providers": False}
@@ -325,190 +430,272 @@ jobs:
                   if not isinstance(providers_dict, dict) or not providers_dict:
                       return {"providers": [], "has_providers": False}
                   
-                  provider_names = list(providers_dict.keys())
                   return {
-                      "providers": provider_names,
-                      "has_providers": len(provider_names) > 0
+                      "providers": list(providers_dict.keys()),
+                      "has_providers": True
                   }
               except Exception as e:
-                  print(f"⚠️ Parse failed {file_path}: {e}")
                   return {"providers": [], "has_providers": False}
 
           def generate_conf_content(filename, raw_url, providers):
-              lines = []
-              lines.append("# --- OpenClash Overwrite Config ---")
-              lines.append(f"# Source: {filename}")
-              lines.append(f"# Generated: Auto-generated by GitHub Actions")
-              lines.append("")
-              lines.append("[General]")
-              lines.append("DISABLE_UDP_QUIC = 1")
-              lines.append("")
-              lines.append(f"DOWNLOAD_FILE = url={raw_url}, path=/etc/openclash/config/{filename}, cron=0 6 * * *, force=false")
-              lines.append("")
-              lines.append(f"CONFIG_FILE = /etc/openclash/config/{filename}")
-              lines.append("")
-              lines.append("SUB_INFO_URL = $EN_KEY1")
-              lines.append("")
-              lines.append("[Overwrite]")
-              lines.append("# EN_KEY: Environment variables for subscription URLs. EN_KEY1=URL1;EN_KEY2=URL2...")
+              lines = [
+                  "# --- OpenClash Overwrite Config ---",
+                  f"# Source: {filename}",
+                  f"# Generated: Auto-generated by GitHub Actions",
+                  "",
+                  "[General]",
+                  "DISABLE_UDP_QUIC = 1",
+                  f"DOWNLOAD_FILE = url={raw_url}, path=/etc/openclash/config/{filename}, cron=0 6 * * *, force=false",
+                  f"CONFIG_FILE = /etc/openclash/config/{filename}",
+                  "SUB_INFO_URL = $EN_KEY1",
+                  "",
+                  "[Overwrite]",
+                  "# EN_KEY: Environment variables for subscription URLs. EN_KEY1=URL1;EN_KEY2=URL2..."
+              ]
               
               if providers:
                   for idx, provider_name in enumerate(providers, start=1):
-                      line = f'ruby_map_edit "$CONFIG_FILE" "[\'proxy-providers\']" "{provider_name}" "[\'url\']" "$EN_KEY{idx}"'
-                      lines.append(line)
-              else:
-                  lines.append("# No proxy-providers detected, no URL overwrite needed")
-              
+                      lines.append(f'ruby_map_edit "$CONFIG_FILE" "[\'proxy-providers\']" "{provider_name}" "[\'url\']" "$EN_KEY{idx}"')
               return "\n".join(lines)
 
-          def scan_and_generate():
-              print("=" * 70)
-              print("OpenClash Config Generator")
-              print("=" * 70)
+          # 确保输出目录存在
+          os.makedirs(OUTPUT_BASE, exist_ok=True)
+          
+          for source_dir in SOURCE_DIRS:
+              if not os.path.exists(source_dir):
+                  continue
               
-              total_generated = 0
-              total_skipped = 0
-              
-              for source_dir in SOURCE_DIRS:
-                  if not os.path.exists(source_dir):
-                      print(f"⚠️ Directory not found: {source_dir}")
-                      continue
-                  
-                  print(f"\n📂 Processing: {source_dir}")
-                  
-                  for root, dirs, files in os.walk(source_dir):
-                      dirs[:] = [d for d in dirs if not d.startswith(".")]
+              for root, dirs, files in os.walk(source_dir):
+                  dirs[:] = [d for d in dirs if not d.startswith(".")]
+                  for filename in files:
+                      if not filename.endswith((".yaml", ".yml")) or filename in IGNORE_FILES:
+                          continue
                       
-                      for filename in files:
-                          if filename in IGNORE_FILES or not filename.endswith((".yaml", ".yml")):
-                              continue
-                          
-                          file_path = os.path.join(root, filename)
-                          parsed = parse_yaml_file(file_path)
-                          
-                          if not parsed["has_providers"]:
-                              print(f"ℹ️ Skip (no providers): {file_path}")
-                              total_skipped += 1
-                              continue
-                          
-                          # 计算相对路径 (相对于 THEYAMLS)
-                          rel_path = os.path.relpath(root, SOURCE_BASE)
-                          # 构建 Raw URL (指向 THEYAMLS)
-                          raw_url = f"{REPO_RAW_BASE}/{SOURCE_BASE}/{rel_path.replace(os.sep, '/')}/{quote(filename)}"
-                          
-                          # 输出路径保持原分类结构
-                          output_dir = os.path.join(OUTPUT_BASE, rel_path)
-                          os.makedirs(output_dir, exist_ok=True)
-                          
-                          conf_filename = os.path.splitext(filename)[0] + ".conf"
-                          output_path = os.path.join(output_dir, conf_filename)
-                          
-                          conf_content = generate_conf_content(filename, raw_url, parsed["providers"])
-                          
-                          with open(output_path, "w", encoding="utf-8") as f:
-                              f.write(conf_content)
-                          
-                          print(f"✅ Generated: {output_path}")
-                          total_generated += 1
-              
-              print("\n" + "=" * 70)
-              print(f"✅ Success: {total_generated} configs")
-              print(f"⏭️ Skipped: {total_skipped} files")
-              print("=" * 70)
-
-          scan_and_generate()
+                      file_path = os.path.join(root, filename)
+                      parsed = parse_yaml_file(file_path)
+                      
+                      if not parsed["has_providers"]:
+                          continue
+                      
+                      rel_path = os.path.relpath(root, SOURCE_BASE)
+                      raw_url = f"{REPO_RAW_BASE}/{SOURCE_BASE}/{rel_path.replace(os.sep, '/')}/{quote(filename)}"
+                      
+                      output_dir = os.path.join(OUTPUT_BASE, rel_path)
+                      os.makedirs(output_dir, exist_ok=True)
+                      
+                      conf_filename = os.path.splitext(filename)[0] + ".conf"
+                      output_path = os.path.join(output_dir, conf_filename)
+                      
+                      with open(output_path, "w", encoding="utf-8") as f:
+                          f.write(generate_conf_content(filename, raw_url, parsed["providers"]))
+                      print(f"✅ OpenClash: {output_path}")
           PYTHON_SCRIPT
 
+      # ==========================================
+      # 4. 为 THEOPENCLASH 生成索引 README
+      # ==========================================
       - name: Generate OpenClash Overview READMEs
         run: |
           python3 << 'PYTHON_SCRIPT'
           import os
           
-          # 修改：基础路径改为 Overwrite/THEOPENCLASH
           OUTPUT_BASE = "Overwrite/THEOPENCLASH"
           CATEGORY_DESC = {
-              "Official_Examples": "Mihomo Official Examples",
-              "General_Config": "General Configs - For daily use",
-              "Smart_Mode": "Smart Mode - For routers",
-              "Mobile_Modules": "Mobile Modules - For rooted Android"
+              "Official_Examples": "Mihomo 官方示例",
+              "General_Config": "通用进阶配置",
+              "Smart_Mode": "Smart 模式 / 路由专用",
+              "Mobile_Modules": "Android 手机模块"
           }
           
-          def generate_category_readme(category_path, category_name):
-              files = []
-              for root, dirs, filenames in os.walk(category_path):
-                  for filename in filenames:
-                      if filename.endswith(".conf"):
-                          rel_path = os.path.relpath(os.path.join(root, filename), category_path)
-                          files.append(rel_path)
-              
-              if not files:
-                  return
-              
-              lines = []
-              lines.append(f"# 📁 {category_name}")
-              lines.append("")
-              lines.append(f"> {CATEGORY_DESC.get(category_name, 'Config List')}")
-              lines.append("")
-              lines.append("## 📋 Config Files")
-              lines.append("")
-              lines.append("| File Path | Description |")
-              lines.append("| :--- | :--- |")
-              
-              for file_path in sorted(files):
-                  lines.append(f"| `{file_path}` | OpenClash Overwrite Config |")
-              
-              lines.append("")
-              lines.append("## 📖 Usage")
-              lines.append("")
-              lines.append("1. Open OpenClash Plugin -> Config Subscribe")
-              lines.append("2. Paste the Raw URL of the `.conf` file")
-              lines.append("3. Set env variables `EN_KEY1`, `EN_KEY2`... to your subscription URLs")
-              lines.append("4. Save and Update")
-              lines.append("")
-              lines.append("[🔙 Back to Main](../README.md)")
-              
-              readme_path = os.path.join(category_path, "README.md")
-              with open(readme_path, "w", encoding="utf-8") as f:
-                  f.write("\n".join(lines))
-              
-              print(f"✅ Generated README: {readme_path}")
+          if not os.path.exists(OUTPUT_BASE):
+              exit(0)
           
-          if os.path.exists(OUTPUT_BASE):
-              for category in os.listdir(OUTPUT_BASE):
-                  category_path = os.path.join(OUTPUT_BASE, category)
-                  if os.path.isdir(category_path):
-                      generate_category_readme(category_path, category)
+          # 为每个分类生成 README
+          for category in os.listdir(OUTPUT_BASE):
+              cat_path = os.path.join(OUTPUT_BASE, category)
+              if not os.path.isdir(cat_path):
+                  continue
               
-              main_lines = []
-              main_lines.append("# 📦 OpenClash Overwrite Configurations")
-              main_lines.append("")
-              main_lines.append("> 🤖 **Auto-generated** from THEYAMLS repository configs")
-              main_lines.append("")
-              main_lines.append("## 📂 Categories")
-              main_lines.append("")
+              conf_files = []
+              for root, dirs, files in os.walk(cat_path):
+                  for f in files:
+                      if f.endswith(".conf"):
+                          rel = os.path.relpath(os.path.join(root, f), cat_path)
+                          conf_files.append(rel)
               
-              for category in sorted(os.listdir(OUTPUT_BASE)):
-                  category_path = os.path.join(OUTPUT_BASE, category)
-                  if os.path.isdir(category_path):
-                      desc = CATEGORY_DESC.get(category, "Configs")
-                      main_lines.append(f"- 📁 **[{category}](./{category}/README.md)** - {desc}")
+              if not conf_files:
+                  continue
               
-              main_lines.append("")
-              main_lines.append("## 🚀 Quick Start")
-              main_lines.append("")
-              main_lines.append("1. Select category and find your config")
-              main_lines.append("2. Click `.conf` file to get Raw URL")
-              main_lines.append("3. Add to OpenClash Config Subscribe")
-              main_lines.append("4. Set environment variables and apply")
-              main_lines.append("")
-              main_lines.append("[🏠 Back to Project](../../README.md)")
+              lines = [
+                  f"# 📁 {CATEGORY_DESC.get(category, category)}",
+                  "",
+                  "## 📋 配置文件列表",
+                  "",
+                  "| 文件路径 | 说明 |",
+                  "| :--- | :--- |"
+              ]
               
-              main_readme = os.path.join(OUTPUT_BASE, "README.md")
-              with open(main_readme, "w", encoding="utf-8") as f:
-                  f.write("\n".join(main_readme))
-              print(f"✅ Generated main README: {main_readme}")
+              for cf in sorted(conf_files):
+                  lines.append(f"| `{cf}` | OpenClash 覆写配置 |")
+              
+              lines.extend([
+                  "",
+                  "## 📖 使用方法",
+                  "1. 在 OpenClash 插件中选择 **配置文件订阅**",
+                  "2. 将对应的 `.conf` 文件 Raw 链接填入订阅地址",
+                  "3. 配置环境变量 `EN_KEY1`、`EN_KEY2` 等为你的机场订阅链接",
+                  "4. 保存并更新",
+                  "",
+                  "[🔙 返回 OpenClash 总览](../README.md)"
+              ])
+              
+              with open(os.path.join(cat_path, "README.md"), "w", encoding="utf-8") as f:
+                  f.write("\n".join(lines))
+              print(f"✅ OpenClash README: {category}")
+
+          # 生成主索引
+          main_lines = [
+              "# 📦 OpenClash 覆写配置文件总览",
+              "",
+              "> 🤖 **自动生成** | 基于 THEYAMLS 配置文件自动生成",
+              "",
+              "## 📂 分类目录",
+              ""
+          ]
+          
+          for category in sorted(os.listdir(OUTPUT_BASE)):
+              cat_path = os.path.join(OUTPUT_BASE, category)
+              if os.path.isdir(cat_path):
+                  desc = CATEGORY_DESC.get(category, category)
+                  main_lines.append(f"- 📁 **[{desc}](./{category}/README.md)**")
+          
+          main_lines.extend([
+              "",
+              "## 🚀 快速开始",
+              "选择上方分类，点击 `.conf` 文件获取 Raw 链接，填入 OpenClash 订阅。",
+              "",
+              "[🏠 返回项目主页](../../README.md)"
+          ])
+          
+          with open(os.path.join(OUTPUT_BASE, "README.md"), "w", encoding="utf-8") as f:
+              f.write("\n".join(main_lines))
           PYTHON_SCRIPT
 
+      # ==========================================
+      # 5. 为 THEINI 生成分类表格 README (调用 download-ini.sh 逆推)
+      # ==========================================
+      - name: Generate INI README with Categories
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import os
+          import re
+          import subprocess
+
+          def parse_ini_script():
+              """解析 download-ini.sh 提取 URL 和自动分类逻辑"""
+              script_path = ".github/scripts/download-ini.sh"
+              if not os.path.exists(script_path):
+                  return {}
+              
+              with open(script_path, 'r', encoding='utf-8') as f:
+                  content = f.read()
+              
+              # 提取 urls 数组内容
+              urls_match = re.search(r'urls=\((.*?)\)', content, re.DOTALL)
+              if not urls_match:
+                  return {}
+              
+              urls_text = urls_match.group(1)
+              # 提取所有 https://...
+              urls = re.findall(r'https?://[^\s"\']+', urls_text)
+              
+              # 复现脚本中的分类逻辑
+              categories = {"ACL4Category": [], "Airport": [], "Ordinary": []}
+              
+              for url in urls:
+                  if 'ACL4SSR' in url:
+                      cat = "ACL4Category"
+                  elif 'jklolixxs' in url or '/customized/' in url or 'Mazeorz/airports' in url:
+                      cat = "Airport"
+                  else:
+                      cat = "Ordinary"
+                  
+                  # 解析作者
+                  if 'github' in url:
+                      parts = url.split('/')
+                      author = parts[4] if 'raw.githubusercontent.com' in url else parts[3]
+                  else:
+                      author = url.split('/')[2]
+                  
+                  filename = url.split('/')[-1]
+                  categories[cat].append({
+                      'author': author,
+                      'filename': filename,
+                      'url': url
+                  })
+              
+              return categories
+
+          # 生成 README
+          cat_data = parse_ini_script()
+          base_path = "Overwrite/THEINI"
+          
+          if not os.path.exists(base_path):
+              exit(0)
+
+          lines = [
+              "# 📂 INI 覆写配置集合 (THEINI)",
+              "",
+              "> 🔄 自动同步的 SubConverter/Clash 远程配置 (INI)",
+              "",
+              "本目录包含自动分类的 INI 远程配置文件。",
+              ""
+          ]
+
+          cat_names = {
+              "ACL4Category": ("🛡️ ACL4SSR 系列", "基于 ACL4SSR 项目的经典规则集"),
+              "Airport": ("✈️ 机场定制版", "各大机场提供的专属定制配置"),
+              "Ordinary": ("📋 通用配置", "社区维护的其他通用规则配置")
+          }
+
+          for cat_key, items in cat_data.items():
+              if not items:
+                  continue
+              
+              title, desc = cat_names.get(cat_key, (cat_key, ""))
+              lines.append(f"## {title}")
+              lines.append(f"> {desc}")
+              lines.append("")
+              lines.append("| 👤 作者/来源 | 📄 配置文件 | 🔗 原始链接 |")
+              lines.append("| :--- | :--- | :--- |")
+              
+              for item in items:
+                  file_path = f"{cat_key}/{item['author']}/{item['filename']}"
+                  lines.append(f"| **{item['author']}** | `{item['filename']}` | [Source]({item['url']}) |")
+              
+              lines.append("")
+
+          # 添加目录树
+          lines.append("## 📊 目录结构")
+          lines.append("```text")
+          try:
+              tree_out = subprocess.run(
+                  ["tree", base_path, "-L", "3", "--dirsfirst", "--charset", "utf-8"],
+                  capture_output=True, text=True
+              )
+              lines.append(tree_out.stdout.strip())
+          except:
+              lines.append("(tree command not available)")
+          lines.append("```")
+
+          with open(os.path.join(base_path, "README.md"), "w", encoding="utf-8") as f:
+              f.write("\n".join(lines))
+          print("✅ Generated THEINI/README.md with categorized tables")
+          PYTHON_SCRIPT
+
+      # ==========================================
+      # 6. 提交所有更改
+      # ==========================================
       - name: Commit and Push
         run: |
           git config --global user.name "github-actions[bot]"
@@ -516,10 +703,10 @@ jobs:
           
           git add .
           if git diff --staged --quiet; then
-            echo "✅ No changes detected. Exiting."
+            echo "✅ No changes detected."
             exit 0
           fi
           
-          git commit -m "🤖 Auto: Generate docs & OpenClash configs $(date +'%Y-%m-%d')"
-          git pull origin ${{ github.ref_name }} --rebase --autostash
+          git commit -m "🤖 Auto: Generate all docs & configs $(date +'%Y-%m-%d')"
+          git pull origin ${{ github.ref_name }} --rebase --autostash || true
           git push origin HEAD:${{ github.ref_name }}

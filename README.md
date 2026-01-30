@@ -104,5 +104,61 @@
 
 </div>
 <!-- AUTO_GENERATED_START -->
-<!-- 这里会自动插入配置列表 -->
+
+## 📦 自动同步配置列表
+
+| 分类 | 配置数 | 文档链接 |
+| :--- | :--- | :--- |
+| **通用进阶配置** | 26 个 | [查看](THEYAMLS/General_Config/README.md) |
+| **Smart 模式 / 路由专用** | 10 个 | [查看](THEYAMLS/Smart_Mode/README.md) |
+| **Android 模块** | 4 个 | [查看](THEYAMLS/Mobile_Modules/README.md) |
+| **官方示例** | 2 个 | [查看](THEYAMLS/Official_Examples/README.md) |
+
+### 📋 最新收录详情
+
+| 作者 | 文件名 | 分类 |
+| :--- | :--- | :--- |
+| **666OS** | `[MihomoPro.yaml](THEYAMLS/General_Config/666OS/MihomoPro_Config.yaml)` | 通用进阶配置 |
+| **666OS** | `[OneTouch.yaml](THEYAMLS/General_Config/666OS/OneTouch_Config.yaml)` | 通用进阶配置 |
+| **666OS** | `[OneSmartPro.yaml](THEYAMLS/Smart_Mode/666OS/OneSmart_Config.yaml)` | Smart 模式 / 路由专用 |
+| **666OS** | `[OneSmart.yaml](THEYAMLS/Smart_Mode/666OS/OneSmart_Lite_Config.yaml)` | Smart 模式 / 路由专用 |
+| **AXEVO** | `[Clash%E9%85%8D%E7%BD%AE.yaml](THEYAMLS/Mobile_Modules/ClashMix/config.yaml)` | Android 模块 |
+| **ClashConnectRules** | `[Clash.yaml](THEYAMLS/General_Config/ClashConnectRules/Clash.yaml)` | 通用进阶配置 |
+| **GitMetaio** | `[config.yaml](THEYAMLS/Mobile_Modules/Surfing/config.yaml)` | Android 模块 |
+| **HenryChiao** | `[MihomoAIO.yaml](THEYAMLS/General_Config/HenryChiao/MihomoAIO.yaml)` | 通用进阶配置 |
+| **HenryChiao** | `[MihomoProMax.yaml](THEYAMLS/General_Config/HenryChiao/MihomoProMax.yaml)` | 通用进阶配置 |
+| **HenryChiao** | `[MihomoProPlus.yaml](THEYAMLS/General_Config/HenryChiao/MihomoProPlus.yaml)` | 通用进阶配置 |
+| **HenryChiao** | `[MihomoSmartProPlus.yaml](THEYAMLS/Smart_Mode/HenryChiao/MihomoSmartProPlus.yaml)` | Smart 模式 / 路由专用 |
+| **HenryChiao** | `[MihomoSmartAIO.yaml](THEYAMLS/Smart_Mode/HenryChiao/MihomoSmartAIO.yaml)` | Smart 模式 / 路由专用 |
+| **HenryChiao** | `[MihomoSmartProMax.yaml](THEYAMLS/Smart_Mode/HenryChiao/MihomoSmartProMax.yaml)` | Smart 模式 / 路由专用 |
+| **JohnsonRan** | `[AIB.yaml](THEYAMLS/General_Config/JohnsonRan/AIB.yaml)` | 通用进阶配置 |
+| **JohnsonRan** | `[AIO.yaml](THEYAMLS/General_Config/JohnsonRan/AIO.yaml)` | 通用进阶配置 |
+| **Lanlan13-14** | `[configfull.yaml](THEYAMLS/General_Config/Lanlan13-14/configfull.yaml)` | 通用进阶配置 |
+| **Lanlan13-14** | `[configfull_lite.yaml](THEYAMLS/General_Config/Lanlan13-14/configfull_lite.yaml)` | 通用进阶配置 |
+| **Lanlan13-14** | `[configfull_NoAd.yaml](THEYAMLS/General_Config/Lanlan13-14/configfull_NoAd.yaml)` | 通用进阶配置 |
+| **akashaProxy** | `[config.example.yaml](THEYAMLS/Mobile_Modules/AkashaProxy/config.yaml)` | Android 模块 |
+| **boxproxy** | `[config.yaml](THEYAMLS/Mobile_Modules/BoxProxy/config.yaml)` | Android 模块 |
+| **echs-top** | `[mihomo.yaml](THEYAMLS/General_Config/echs-top/mihomo.yaml)` | 通用进阶配置 |
+| **echs-top** | `[mihomo_smart.yaml](THEYAMLS/Smart_Mode/echs-top/mihomo_smart.yaml)` | Smart 模式 / 路由专用 |
+| **gist** | `[config.yaml](THEYAMLS/General_Config/liuran001/config.yaml)` | 通用进阶配置 |
+| **liandu2024** | `[clash-fallback.yaml](THEYAMLS/General_Config/liandu2024/clash-fallback.yaml)` | 通用进阶配置 |
+| **liandu2024** | `[clash-fallback-std.yaml](THEYAMLS/General_Config/liandu2024/clash-fallback-std.yaml)` | 通用进阶配置 |
+| **liandu2024** | `[clash-fallback-dialer.yaml](THEYAMLS/General_Config/liandu2024/clash-fallback-dialer.yaml)` | 通用进阶配置 |
+| **liandu2024** | `[clash-fallback-all.yaml](THEYAMLS/General_Config/liandu2024/clash-fallback-all.yaml)` | 通用进阶配置 |
+| **liandu2024** | `[clash-all-fallback.yaml](THEYAMLS/General_Config/liandu2024/clash-all-fallback.yaml)` | 通用进阶配置 |
+| **liandu2024** | `[clash-fallback-smart-std.yaml](THEYAMLS/Smart_Mode/liandu2024/clash-fallback-smart-std.yaml)` | Smart 模式 / 路由专用 |
+| **liandu2024** | `[clash-all-smart.yaml](THEYAMLS/Smart_Mode/liandu2024/clash-all-smart.yaml)` | Smart 模式 / 路由专用 |
+| **liandu2024** | `[clash-all-fallback-smart.yaml](THEYAMLS/Smart_Mode/liandu2024/clash-all-fallback-smart.yaml)` | Smart 模式 / 路由专用 |
+| **luestr** | `[Clash_Sample_Config_By_iKeLee.yaml](THEYAMLS/General_Config/iKeLee/Clash_Sample.yaml)` | 通用进阶配置 |
+| **qichiyuhub** | `[config.yaml](THEYAMLS/General_Config/qichiyuhub/config.yaml)` | 通用进阶配置 |
+| **qichiyuhub** | `[smart.yaml](THEYAMLS/Smart_Mode/qichiyuhub/smart.yaml)` | Smart 模式 / 路由专用 |
+| **sunfing** | `[ConfigForClash](THEYAMLS/General_Config/fufu/ConfigForClash.yaml)` | 通用进阶配置 |
+| **wanswu** | `[config.yaml](THEYAMLS/General_Config/wanswu/config.yaml)` | 通用进阶配置 |
+| **wiki** | `[mrs](THEYAMLS/Official_Examples/Metacubex/rule-set_config.yaml)` | 官方示例 |
+| **wiki** | `[geox](THEYAMLS/Official_Examples/Metacubex/geox_config.yaml)` | 官方示例 |
+| **yiteei** | `[redir-host.yaml](THEYAMLS/General_Config/Yiteei/redir-host_config.yaml)` | 通用进阶配置 |
+| **yiteei** | `[fake-ip.yaml](THEYAMLS/General_Config/Yiteei/fake-ip_config.yaml)` | 通用进阶配置 |
+| **yyhhyyyyyy** | `[mihomo_single.yaml](THEYAMLS/General_Config/yyhhyyyyyy/mihomo_single.yaml)` | 通用进阶配置 |
+| **yyhhyyyyyy** | `[mihomo_multi.yaml](THEYAMLS/General_Config/yyhhyyyyyy/mihomo_multi.yaml)` | 通用进阶配置 |
+
 <!-- AUTO_GENERATED_END -->

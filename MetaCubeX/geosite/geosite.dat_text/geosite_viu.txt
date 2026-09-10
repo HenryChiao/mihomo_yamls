@@ -1,0 +1,7 @@
+full:api.viu.now.com
+full:dfp6rglgjqszk.cloudfront.net
+full:d1k2us671qcoau.cloudfront.net
+full:d2anahhhmp1ffz.cloudfront.net
+viu.tv
+viu.com
+regexp:^ewcdn[0-9]+\.nowe\.com$

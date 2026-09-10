@@ -1,0 +1,13 @@
+full:amp.akamaized.net
+openjsf.org
+amp.dev
+ampproject.com
+ampproject.net
+ampproject.org
+electronjs.org
+jquery.com
+jquerymobile.com
+jqueryui.com
+mochajs.org
+nodejs.org
+full:cdn.ampproject.org

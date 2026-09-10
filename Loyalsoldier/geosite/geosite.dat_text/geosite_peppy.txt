@@ -1,0 +1,10 @@
+full:a.ppy.sh
+full:assets.ppy.sh
+full:c.ppy.sh
+full:osu.ppy.sh
+full:m1.ppy.sh
+full:lazer.ppy.sh
+full:notify.ppy.sh
+full:sentry.ppy.sh
+full:spectator.ppy.sh
+ppy.sh

@@ -1,0 +1,9 @@
+applemusic.com
+blobstore.apple.com
+music.apple.com
+full:aod-ssl.itunes.apple.com
+full:aod.itunes.apple.com
+full:audio-ssl.itunes.apple.com
+full:audio.itunes.apple.com
+full:mvod.itunes.apple.com
+full:streamingaudio.itunes.apple.com

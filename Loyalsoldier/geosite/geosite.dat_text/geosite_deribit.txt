@@ -1,0 +1,2 @@
+full:deribit.cdn.prismic.io
+deribit.com

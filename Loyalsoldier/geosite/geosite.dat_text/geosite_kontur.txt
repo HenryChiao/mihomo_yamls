@@ -1,0 +1,5 @@
+kontur.ru
+kontur.host
+kontur-inc.com
+full:metrika.kontur.ru
+full:sentry.kontur.host

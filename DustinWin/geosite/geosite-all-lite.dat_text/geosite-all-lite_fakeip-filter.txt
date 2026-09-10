@@ -1,0 +1,8 @@
+full:adguardteam.github.io
+full:adrules.top
+full:anti-ad.net
+full:local.adguard.org
+full:static.adtidy.org
+keyword:ntp
+keyword:stun
+keyword:time

@@ -1,0 +1,4 @@
+full:standchartbank.sc.omtrdc.net
+full:standchartbank.tt.omtrdc.net
+sc.com
+standardchartered.com

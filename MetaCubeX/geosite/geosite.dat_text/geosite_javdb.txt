@@ -1,0 +1,5 @@
+jav.app
+javdb.com
+jdbimgs.com
+jdbstatic.com
+regexp:javdb\d+\.com$

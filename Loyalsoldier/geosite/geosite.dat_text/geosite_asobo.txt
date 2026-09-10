@@ -1,0 +1,3 @@
+full:flightsimulator.azureedge.net
+asobostudio.com
+flightsimulator.com

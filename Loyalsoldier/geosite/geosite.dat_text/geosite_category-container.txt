@@ -1,0 +1,10 @@
+azurecr.io
+docker.io
+ecr.aws
+gcr.io
+ghcr.io
+quay.io
+mcr.microsoft.com
+registry.gitlab.com
+registry.k8s.io
+regexp:.+\.dkr\.ecr\.[^\.]+\.amazonaws\.com$

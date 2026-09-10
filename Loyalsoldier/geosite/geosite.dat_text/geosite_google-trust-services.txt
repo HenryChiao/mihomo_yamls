@@ -1,0 +1,12 @@
+full:publicca.googleapis.com
+full:preprod-publicca.googleapis.com
+full:clients1.google.com
+full:pki.google.com
+pki.goog
+full:pki-goog.l.google.com
+full:c.pki.goog
+full:i.pki.goog
+full:o.pki.goog
+full:crl.pki.goog
+full:crls.pki.goog
+full:ocsp.pki.goog

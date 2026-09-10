@@ -1,0 +1,6 @@
+full:copilot-proxy.githubusercontent.com
+full:copilot-workspace.githubnext.com
+full:copilotprodattachments.blob.core.windows.net
+githubcopilot.com
+full:copilot-telemetry-service.githubusercontent.com
+full:copilot-telemetry.githubusercontent.com

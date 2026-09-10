@@ -1,0 +1,6 @@
+full:amp.akamaized.net
+amp.dev
+ampproject.com
+ampproject.net
+ampproject.org
+full:cdn.ampproject.org

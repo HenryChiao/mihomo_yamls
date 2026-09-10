@@ -1,0 +1,2 @@
+full:homebrew.bintray.com
+brew.sh

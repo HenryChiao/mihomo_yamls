@@ -1,0 +1,6 @@
+HOST,mytvsuperlimited.hb.omtrdc.net,mytvsuper
+HOST,mytvsuperlimited.sc.omtrdc.net,mytvsuper
+HOST-SUFFIX,mytvsuper.com,mytvsuper
+HOST-SUFFIX,tvb.com,mytvsuper
+HOST-KEYWORD,nowtv100,mytvsuper
+HOST-KEYWORD,rthklive,mytvsuper

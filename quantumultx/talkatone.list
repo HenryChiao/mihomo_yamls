@@ -1,0 +1,17 @@
+HOST-SUFFIX,agkn.com,talkatone
+HOST-SUFFIX,cohere.com,talkatone
+HOST-SUFFIX,crashlytics.com,talkatone
+HOST-SUFFIX,inmobi.com,talkatone
+HOST-SUFFIX,inner-active.mobi,talkatone
+HOST-SUFFIX,ip-api.com,talkatone
+HOST-SUFFIX,kochava.com,talkatone
+HOST-SUFFIX,mobilefuse.com,talkatone
+HOST-SUFFIX,talkatone.com,talkatone
+HOST-SUFFIX,tenor.com,talkatone
+HOST-SUFFIX,tktn.at,talkatone
+HOST-SUFFIX,tktn.be,talkatone
+IP-CIDR,205.164.56.0/24,talkatone
+IP-CIDR,216.172.154.0/24,talkatone
+IP-CIDR,50.117.27.0/24,talkatone
+IP-CIDR,63.251.124.0/24,talkatone
+IP-CIDR,69.46.75.0/24,talkatone
